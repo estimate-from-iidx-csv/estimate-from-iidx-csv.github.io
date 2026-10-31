@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Feel The Beat [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -0.027, "c": "種", "n": "Feel The Beat [A]  n=3583 cos1.00 難-0.03", "s": 0.969, "f": 0}, {"x": 0.825, "y": 0.169, "c": "近傍", "n": "BLAZING_LAZER [A]  n=1544 cos0.83 難0.17", "s": 0.417, "f": 0}, {"x": 0.8, "y": 0.009, "c": "近傍", "n": "Fegrix [A]  n=2616 cos0.80 難0.01", "s": 0.707, "f": 0}, {"x": 0.795, "y": 0.009, "c": "近傍", "n": "Double Dribble [A]  n=2975 cos0.80 難0.01", "s": 0.804, "f": 0}, {"x": 0.756, "y": -0.157, "c": "近傍", "n": "GO! [A]  n=525 cos0.76 難-0.16", "s": 0.142, "f": 0}, {"x": 0.747, "y": 0.06, "c": "近傍", "n": "即席！脳直★ミュージックシステム [A]  n=3485 cos0.75 難0.06", "s": 0.942, "f": 0}, {"x": 0.941, "y": 0.583, "c": "近傍", "n": "MAXIMUM CHEAT GIRL [A]  n=1503 cos0.94 難0.58", "s": 0.406, "f": 0}, {"x": 0.762, "y": -0.347, "c": "近傍", "n": "Little Star [A]  n=3655 cos0.76 難-0.35", "s": 0.988, "f": 0}, {"x": 0.763, "y": -0.356, "c": "近傍", "n": "invoker [A]  n=3699 cos0.76 難-0.36", "s": 1.0, "f": 0}, {"x": 0.753, "y": 0.297, "c": "近傍", "n": "The Last Apocalypse [A]  n=1406 cos0.75 難0.30", "s": 0.38, "f": 0}, {"x": 0.712, "y": 0.141, "c": "近傍", "n": "Seven Times Four [A]  n=1316 cos0.71 難0.14", "s": 0.356, "f": 0}, {"x": 0.785, "y": 0.483, "c": "近傍", "n": "Sol Cosine Job 2 [A]  n=3220 cos0.78 難0.48", "s": 0.871, "f": 0}, {"x": 0.783, "y": -0.544, "c": "近傍", "n": "Be a Hero! [A]  n=3182 cos0.78 難-0.54", "s": 0.86, "f": 0}, {"x": 0.677, "y": 0.096, "c": "近傍", "n": "COSMIC V3LOCITY [A]  n=1123 cos0.68 難0.10", "s": 0.304, "f": 0}, {"x": 0.698, "y": 0.259, "c": "近傍", "n": "AKASHIC BREAK [A]  n=2945 cos0.70 難0.26", "s": 0.796, "f": 0}, {"x": 0.668, "y": -0.076, "c": "近傍", "n": "恋する☆宇宙戦争っ！！ [A]  n=3603 cos0.67 難-0.08", "s": 0.974, "f": 0}, {"x": 0.661, "y": 0.102, "c": "近傍", "n": "Catch Our Fire! [A]  n=3254 cos0.66 難0.10", "s": 0.88, "f": 0}, {"x": 0.673, "y": -0.385, "c": "近傍", "n": "encounter [A]  n=3608 cos0.67 難-0.39", "s": 0.975, "f": 0}, {"x": 0.641, "y": 0.275, "c": "近傍", "n": "THUNDERSTRIKE [A]  n=522 cos0.64 難0.27", "s": 0.141, "f": 0}, {"x": 0.618, "y": 0.169, "c": "近傍", "n": "PUNISHER [A]  n=3492 cos0.62 難0.17", "s": 0.944, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.29334830556325586}, {"a": 0, "b": 2, "w": 0.2634300375878945}, {"a": 0, "b": 3, "w": 0.0789037413873781}, {"a": 0, "b": 4, "w": 0.17934470520887946}, {"a": 0, "b": 5, "w": 0.17044385513519578}, {"a": 0, "b": 6, "w": 0.5884961101099391}, {"a": 0, "b": 7, "w": 0.21044889854695303}, {"a": 0, "b": 8, "w": 0.19112072093718402}, {"a": 0, "b": 9, "w": 0.19959446719414142}, {"a": 0, "b": 10, "w": 0.12183120130938441}, {"a": 0, "b": 11, "w": 0.24500605121135555}, {"a": 0, "b": 12, "w": 0.20535844595568664}, {"a": 0, "b": 13, "w": 0.08714931152817851}, {"a": 0, "b": 14, "w": 4.2814207734664933e-10}, {"a": 0, "b": 15, "w": 0.0902187629334179}, {"a": 0, "b": 16, "w": 0.07395014310747372}, {"a": 0, "b": 17, "w": 0.10198201501037385}, {"a": 0, "b": 18, "w": 0.053823404858014734}, {"a": 0, "b": 19, "w": 0.00844989112363348}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.588,hiX=1.031,loY=-0.634,hiY=0.673;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

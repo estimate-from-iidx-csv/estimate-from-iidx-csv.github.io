@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Lisa-RICCIA [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -0.482, "c": "種", "n": "Lisa-RICCIA [A]  n=1105 cos1.00 難-0.48", "s": 0.305, "f": 0}, {"x": 0.697, "y": -0.441, "c": "近傍", "n": "ALBA -黎明- [A]  n=3622 cos0.70 難-0.44", "s": 0.999, "f": 0}, {"x": 0.659, "y": -0.442, "c": "近傍", "n": "Para siempre [A]  n=2656 cos0.66 難-0.44", "s": 0.733, "f": 0}, {"x": 0.571, "y": -0.409, "c": "近傍", "n": "ADAMANT [A]  n=1490 cos0.57 難-0.41", "s": 0.411, "f": 0}, {"x": 0.569, "y": -0.543, "c": "近傍", "n": "Xyndrome [A]  n=2491 cos0.57 難-0.54", "s": 0.687, "f": 0}, {"x": 0.576, "y": -0.769, "c": "近傍", "n": "AGEHA [L]  n=2362 cos0.58 難-0.77", "s": 0.652, "f": 0}, {"x": 0.58, "y": -0.079, "c": "近傍", "n": "GIGANT [L]  n=1737 cos0.58 難-0.08", "s": 0.479, "f": 0}, {"x": 0.558, "y": -0.213, "c": "近傍", "n": "10000 MILES AWAY [A]  n=1983 cos0.56 難-0.21", "s": 0.547, "f": 0}, {"x": 0.541, "y": -0.514, "c": "近傍", "n": "THE DEEP STRIKER [A]  n=3369 cos0.54 難-0.51", "s": 0.929, "f": 0}, {"x": 0.535, "y": -0.588, "c": "近傍", "n": "BroGamer [A]  n=3625 cos0.53 難-0.59", "s": 1.0, "f": 0}, {"x": 0.497, "y": -0.35, "c": "近傍", "n": "BIGソムタム [A]  n=3071 cos0.50 難-0.35", "s": 0.847, "f": 0}, {"x": 0.535, "y": 0.096, "c": "近傍", "n": "COSMIC V3LOCITY [A]  n=1123 cos0.53 難0.10", "s": 0.31, "f": 0}, {"x": 0.535, "y": 0.111, "c": "近傍", "n": "Ou Legends [A]  n=1985 cos0.53 難0.11", "s": 0.548, "f": 0}, {"x": 0.483, "y": -0.695, "c": "近傍", "n": "CHAOTIC SUNBIRD [A]  n=1468 cos0.48 難-0.69", "s": 0.405, "f": 0}, {"x": 0.494, "y": -0.108, "c": "近傍", "n": "garden [L]  n=955 cos0.49 難-0.11", "s": 0.263, "f": 0}, {"x": 0.644, "y": 0.58, "c": "近傍", "n": "Vermilion Carol [A]  n=1636 cos0.64 難0.58", "s": 0.451, "f": 0}, {"x": 0.66, "y": 0.624, "c": "近傍", "n": "THE DAY OF JUBILATIONS [A]  n=3042 cos0.66 難0.62", "s": 0.839, "f": 0}, {"x": 0.485, "y": -0.773, "c": "近傍", "n": "Lovely Howdy Cowboy!! [A]  n=2464 cos0.49 難-0.77", "s": 0.68, "f": 0}, {"x": 0.552, "y": 0.279, "c": "近傍", "n": "Always We Trust In You [A]  n=1746 cos0.55 難0.28", "s": 0.482, "f": 0}, {"x": 0.485, "y": -0.146, "c": "近傍", "n": "Summerlights(IIDX Edition) [A]  n=3538 cos0.49 難-0.15", "s": 0.976, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.5966095842928072}, {"a": 0, "b": 2, "w": 0.42202154906632006}, {"a": 0, "b": 3, "w": 0.41469670228280564}, {"a": 0, "b": 4, "w": 0.4897394872744568}, {"a": 0, "b": 5, "w": 0.3178023782323782}, {"a": 0, "b": 6, "w": 2.7574276195707625e-10}, {"a": 0, "b": 7, "w": 0.01593687153258716}, {"a": 0, "b": 8, "w": 0.5113069446660564}, {"a": 0, "b": 9, "w": 0.3688742260278458}, {"a": 0, "b": 10, "w": 0.2054547232483831}, {"a": 0, "b": 11, "w": 0.5158132303465517}, {"a": 0, "b": 12, "w": 0.4119911640324926}, {"a": 0, "b": 13, "w": 0.4405685617274776}, {"a": 0, "b": 14, "w": 0.4056732688513368}, {"a": 0, "b": 15, "w": 0.46280911652021517}, {"a": 0, "b": 16, "w": 0.5381964451992899}, {"a": 0, "b": 17, "w": 0.41382342732861854}, {"a": 0, "b": 18, "w": 0.5182318724586709}, {"a": 0, "b": 19, "w": 0.46898350194142124}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.441,hiX=1.041,loY=-0.885,hiY=0.736;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

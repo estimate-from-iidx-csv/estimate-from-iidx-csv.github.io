@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Battleground [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -1.049, "c": "種", "n": "Battleground [A]  n=3256 cos1.00 難-1.05", "s": 0.895, "f": 0}, {"x": 0.924, "y": -1.046, "c": "近傍", "n": "Debtty Daddy [A]  n=3097 cos0.92 難-1.05", "s": 0.852, "f": 0}, {"x": 0.908, "y": -1.034, "c": "近傍", "n": "SOLID WYVERN [A]  n=2515 cos0.91 難-1.03", "s": 0.692, "f": 0}, {"x": 0.944, "y": -0.915, "c": "近傍", "n": "Sun Field [A]  n=3129 cos0.94 難-0.92", "s": 0.86, "f": 0}, {"x": 0.889, "y": -0.984, "c": "近傍", "n": "Cyber True Color [A]  n=3027 cos0.89 難-0.98", "s": 0.832, "f": 0}, {"x": 0.869, "y": -1.028, "c": "近傍", "n": "Evans [H]  n=3505 cos0.87 難-1.03", "s": 0.964, "f": 0}, {"x": 0.858, "y": -1.07, "c": "近傍", "n": "Broadbanded [A]  n=3231 cos0.86 難-1.07", "s": 0.888, "f": 0}, {"x": 0.854, "y": -1.109, "c": "近傍", "n": "泰東ノ翠霞 [A]  n=2888 cos0.85 難-1.11", "s": 0.794, "f": 0}, {"x": 0.883, "y": -0.896, "c": "近傍", "n": "Egret and Willow [A]  n=3193 cos0.88 難-0.90", "s": 0.878, "f": 0}, {"x": 0.836, "y": -1.022, "c": "近傍", "n": "LASER CRUSTER [H]  n=3194 cos0.84 難-1.02", "s": 0.878, "f": 0}, {"x": 0.834, "y": -1.041, "c": "近傍", "n": "KHAMEN BREAK [A]  n=3448 cos0.83 難-1.04", "s": 0.948, "f": 0}, {"x": 0.826, "y": -1.032, "c": "近傍", "n": "murmur twins [A]  n=3512 cos0.83 難-1.03", "s": 0.966, "f": 0}, {"x": 0.862, "y": -0.896, "c": "近傍", "n": "RESONATE 1794 [A]  n=3159 cos0.86 難-0.90", "s": 0.869, "f": 0}, {"x": 0.861, "y": -0.893, "c": "近傍", "n": "Submerge Serenade [A]  n=1906 cos0.86 難-0.89", "s": 0.524, "f": 0}, {"x": 0.828, "y": -1.124, "c": "近傍", "n": "煉獄コンフィチュール [A]  n=1044 cos0.83 難-1.12", "s": 0.287, "f": 0}, {"x": 0.816, "y": -1.055, "c": "近傍", "n": "Aurora [A]  n=3637 cos0.82 難-1.06", "s": 1.0, "f": 0}, {"x": 0.817, "y": -1.082, "c": "近傍", "n": "MA・TSU・RI [A]  n=2098 cos0.82 難-1.08", "s": 0.577, "f": 0}, {"x": 0.818, "y": -1.095, "c": "近傍", "n": "CaptivAte～浄化～ [A]  n=3632 cos0.82 難-1.09", "s": 0.999, "f": 0}, {"x": 0.814, "y": -1.061, "c": "近傍", "n": "#The_Relentless [A]  n=3428 cos0.81 難-1.06", "s": 0.943, "f": 0}, {"x": 0.822, "y": -1.131, "c": "近傍", "n": "IN BETWEEN [A]  n=1011 cos0.82 難-1.13", "s": 0.278, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.6748992355045336}, {"a": 0, "b": 2, "w": 0.6665389915427804}, {"a": 0, "b": 3, "w": 0.6849946193668836}, {"a": 0, "b": 4, "w": 0.2539614329328873}, {"a": 0, "b": 5, "w": 0.4763996218447697}, {"a": 0, "b": 6, "w": 3.843328988395456e-10}, {"a": 0, "b": 7, "w": 0.06999239085453368}, {"a": 0, "b": 8, "w": 0.5721697039967142}, {"a": 0, "b": 9, "w": 0.24043514246516873}, {"a": 0, "b": 10, "w": 0.17802711044220987}, {"a": 0, "b": 11, "w": 0.3204214973668237}, {"a": 0, "b": 12, "w": 0.07054895975469955}, {"a": 0, "b": 13, "w": 0.5869629894923505}, {"a": 0, "b": 14, "w": 0.48912470677388964}, {"a": 0, "b": 15, "w": 0.5453257422940219}, {"a": 0, "b": 16, "w": 0.4828451658501325}, {"a": 0, "b": 17, "w": 0.45410260379987066}, {"a": 0, "b": 18, "w": 0.5474647263598841}, {"a": 0, "b": 19, "w": 0.43511862087739617}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.799,hiX=1.015,loY=-1.150,hiY=-0.874;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">NZM [H] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -1.267, "c": "種", "n": "NZM [H]  n=1596 cos1.00 難-1.27", "s": 0.699, "f": 0}, {"x": 0.983, "y": -1.287, "c": "近傍", "n": "Summerlights(IIDX Edition) [H]  n=1470 cos0.98 難-1.29", "s": 0.644, "f": 0}, {"x": 0.978, "y": -1.241, "c": "近傍", "n": "BIGWAVERS [H]  n=767 cos0.98 難-1.24", "s": 0.336, "f": 0}, {"x": 0.975, "y": -1.298, "c": "近傍", "n": "TRIUMPH [H]  n=1661 cos0.98 難-1.30", "s": 0.727, "f": 0}, {"x": 0.974, "y": -1.269, "c": "近傍", "n": "妖隠し -あやかしかくし- [H]  n=2230 cos0.97 難-1.27", "s": 0.976, "f": 0}, {"x": 0.975, "y": -1.39, "c": "近傍", "n": "Donkey Donk [H]  n=1724 cos0.98 難-1.39", "s": 0.755, "f": 0}, {"x": 0.97, "y": -1.229, "c": "近傍", "n": "麗 ～うらら～ [H]  n=1861 cos0.97 難-1.23", "s": 0.815, "f": 0}, {"x": 0.975, "y": -1.125, "c": "近傍", "n": "Night sky [H]  n=2107 cos0.98 難-1.13", "s": 0.923, "f": 0}, {"x": 0.968, "y": -1.288, "c": "近傍", "n": "水鏡の異界 [H]  n=1253 cos0.97 難-1.29", "s": 0.549, "f": 0}, {"x": 0.968, "y": -1.184, "c": "近傍", "n": "T-REX vs Velociraptor (In the Far east euphoria) [H]  n=1582 cos0.97 難-1.18", "s": 0.693, "f": 0}, {"x": 0.966, "y": -1.287, "c": "近傍", "n": "忍恋花 [H]  n=1362 cos0.97 難-1.29", "s": 0.596, "f": 0}, {"x": 0.974, "y": -1.443, "c": "近傍", "n": "LIGHTNING STRIKES [H]  n=1677 cos0.97 難-1.44", "s": 0.734, "f": 0}, {"x": 0.964, "y": -1.278, "c": "近傍", "n": "ビビッド ☆+*。キラキライム [H]  n=537 cos0.96 難-1.28", "s": 0.235, "f": 0}, {"x": 0.965, "y": -1.342, "c": "近傍", "n": "SHELTER OF THE MIND [H]  n=1721 cos0.97 難-1.34", "s": 0.754, "f": 0}, {"x": 0.968, "y": -1.423, "c": "近傍", "n": "Daily Lunch Special [H]  n=1714 cos0.97 難-1.42", "s": 0.75, "f": 0}, {"x": 0.962, "y": -1.297, "c": "近傍", "n": "BEAT PRISONER [H]  n=1425 cos0.96 難-1.30", "s": 0.624, "f": 0}, {"x": 0.964, "y": -1.165, "c": "近傍", "n": "BIGソムタム [H]  n=1909 cos0.96 難-1.17", "s": 0.836, "f": 0}, {"x": 0.967, "y": -1.125, "c": "近傍", "n": "Reflux [H]  n=1964 cos0.97 難-1.12", "s": 0.86, "f": 0}, {"x": 0.961, "y": -1.279, "c": "近傍", "n": "量子の海のリントヴルム [H]  n=2284 cos0.96 難-1.28", "s": 1.0, "f": 0}, {"x": 0.976, "y": -1.496, "c": "近傍", "n": "Yellow Sketch(RX-Ver.S.P.L.) [H]  n=1001 cos0.98 難-1.50", "s": 0.438, "f": 0}, {"x": 0.974, "y": -1.484, "c": "近傍", "n": "Dawn Saga [H]  n=1270 cos0.97 難-1.48", "s": 0.556, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.5229686470201292}, {"a": 0, "b": 2, "w": 0.45728718504889854}, {"a": 0, "b": 3, "w": 0.29364305976633087}, {"a": 0, "b": 4, "w": 0.33633133097183543}, {"a": 0, "b": 5, "w": 0.2756388476291599}, {"a": 0, "b": 6, "w": 0.34710863234367917}, {"a": 0, "b": 7, "w": 0.4229815422432215}, {"a": 0, "b": 8, "w": 0.3386658956007814}, {"a": 0, "b": 9, "w": 0.3549347858720764}, {"a": 0, "b": 10, "w": 0.33319608559041813}, {"a": 0, "b": 11, "w": 0.40347730488554767}, {"a": 0, "b": 12, "w": 0.31067445180329645}, {"a": 0, "b": 13, "w": 0.31711693740976876}, {"a": 0, "b": 14, "w": 0.32741179449593116}, {"a": 0, "b": 15, "w": 2.8563706955253565e-11}, {"a": 0, "b": 16, "w": 0.2739204250963072}, {"a": 0, "b": 17, "w": 0.28892400493256265}, {"a": 0, "b": 18, "w": 0.2875890715913496}, {"a": 0, "b": 19, "w": 0.43640501703668966}, {"a": 0, "b": 20, "w": 0.41454900887521606}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.958,hiX=1.003,loY=-1.526,hiY=-1.095;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

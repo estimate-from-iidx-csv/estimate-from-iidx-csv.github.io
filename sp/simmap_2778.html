@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Push on Beats!～音ゲの国のeX-ストリーマー～ [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 0.566, "c": "種", "n": "Push on Beats!～音ゲの国のeX-ストリーマー～ [A]  n=2136 cos1.00 難0.57", "s": 0.606, "f": 0}, {"x": 0.857, "y": 0.733, "c": "近傍", "n": "NEO GENERATOR SEVEN [A]  n=3239 cos0.86 難0.73", "s": 0.919, "f": 0}, {"x": 0.729, "y": 0.441, "c": "近傍", "n": "Innocent Walls [A]  n=3523 cos0.73 難0.44", "s": 1.0, "f": 0}, {"x": 0.704, "y": 0.496, "c": "近傍", "n": "Amazing Mirage [L]  n=3168 cos0.70 難0.50", "s": 0.899, "f": 0}, {"x": 0.81, "y": 0.96, "c": "近傍", "n": "Devilz Staircase [A]  n=3160 cos0.81 難0.96", "s": 0.897, "f": 0}, {"x": 0.752, "y": 0.254, "c": "近傍", "n": "MENTAL MELTDOWN [A]  n=3287 cos0.75 難0.25", "s": 0.933, "f": 0}, {"x": 0.864, "y": 1.027, "c": "近傍", "n": "†渚の小悪魔ラヴリィ～レイディオ†(IIDX EDIT) [A]  n=3244 cos0.86 難1.03", "s": 0.921, "f": 0}, {"x": 0.706, "y": 0.774, "c": "近傍", "n": "One for All [A]  n=2188 cos0.71 難0.77", "s": 0.621, "f": 0}, {"x": 0.673, "y": 0.591, "c": "近傍", "n": "DOMINION [A]  n=3429 cos0.67 難0.59", "s": 0.973, "f": 0}, {"x": 0.672, "y": 0.568, "c": "近傍", "n": "KILL EACH OTHER [A]  n=3039 cos0.67 難0.57", "s": 0.863, "f": 0}, {"x": 0.728, "y": 0.89, "c": "近傍", "n": "ORCA [A]  n=2516 cos0.73 難0.89", "s": 0.714, "f": 0}, {"x": 0.71, "y": 0.85, "c": "近傍", "n": "kors k's How to make OTOGE CORE 「LONG」 [A]  n=1821 cos0.71 難0.85", "s": 0.517, "f": 0}, {"x": 0.666, "y": 0.458, "c": "近傍", "n": "Angel's Ladder [A]  n=2484 cos0.67 難0.46", "s": 0.705, "f": 0}, {"x": 0.671, "y": 0.741, "c": "近傍", "n": "UNDO THE NIGHT [A]  n=629 cos0.67 難0.74", "s": 0.179, "f": 0}, {"x": 0.65, "y": 0.618, "c": "近傍", "n": "THE DEEP STRIKER [L]  n=2914 cos0.65 難0.62", "s": 0.827, "f": 0}, {"x": 0.745, "y": 0.169, "c": "近傍", "n": "LIVE DRIVING!! feat. 花たん [A]  n=2547 cos0.75 難0.17", "s": 0.723, "f": 0}, {"x": 0.715, "y": 0.909, "c": "近傍", "n": "Monopole. [A]  n=3161 cos0.71 難0.91", "s": 0.897, "f": 0}, {"x": 0.873, "y": 1.102, "c": "近傍", "n": "Devil's Gear [A]  n=2984 cos0.87 難1.10", "s": 0.847, "f": 0}, {"x": 0.642, "y": 0.64, "c": "近傍", "n": "Sense 2007 [A]  n=3322 cos0.64 難0.64", "s": 0.943, "f": 0}, {"x": 0.634, "y": 0.568, "c": "近傍", "n": "I [A]  n=2077 cos0.63 難0.57", "s": 0.59, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.5912907027158938}, {"a": 0, "b": 2, "w": 2.444263680345671e-10}, {"a": 0, "b": 3, "w": 0.4653667953888444}, {"a": 0, "b": 4, "w": 0.2800708215081613}, {"a": 0, "b": 5, "w": 0.3454544229315709}, {"a": 0, "b": 6, "w": 0.5813791354000957}, {"a": 0, "b": 7, "w": 0.4028537148133182}, {"a": 0, "b": 8, "w": 0.43815806335297436}, {"a": 0, "b": 9, "w": 0.4375695513196852}, {"a": 0, "b": 10, "w": 0.4840549854396383}, {"a": 0, "b": 11, "w": 0.4694572289103578}, {"a": 0, "b": 12, "w": 0.43851521598453225}, {"a": 0, "b": 13, "w": 0.3542639163623368}, {"a": 0, "b": 14, "w": 0.4120600420195728}, {"a": 0, "b": 15, "w": 0.41882152244527204}, {"a": 0, "b": 16, "w": 0.46903310568882184}, {"a": 0, "b": 17, "w": 0.6219949541258016}, {"a": 0, "b": 18, "w": 0.35004831450954543}, {"a": 0, "b": 19, "w": 0.3742476208415164}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.605,hiX=1.029,loY=0.094,hiY=1.177;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

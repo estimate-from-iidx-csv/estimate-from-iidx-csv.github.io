@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Banger Banger Banger Banger [H] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -1.878, "c": "種", "n": "Banger Banger Banger Banger [H]  n=824 cos1.00 難-1.88", "s": 0.636, "f": 0}, {"x": 0.996, "y": -1.822, "c": "近傍", "n": "Victory Of Ravers [H]  n=725 cos1.00 難-1.82", "s": 0.559, "f": 0}, {"x": 0.995, "y": -1.833, "c": "近傍", "n": "儚き恋の華 [H]  n=970 cos1.00 難-1.83", "s": 0.748, "f": 0}, {"x": 0.995, "y": -1.897, "c": "近傍", "n": "Next Tales 2 Oath (IIDX 20th Anniv \"Ring\" Theme) [H]  n=956 cos0.99 難-1.90", "s": 0.738, "f": 0}, {"x": 0.994, "y": -1.885, "c": "近傍", "n": "Ritual of Anubis [H]  n=624 cos0.99 難-1.89", "s": 0.481, "f": 0}, {"x": 0.994, "y": -1.918, "c": "近傍", "n": "3V0 [H]  n=766 cos0.99 難-1.92", "s": 0.591, "f": 0}, {"x": 0.993, "y": -1.866, "c": "近傍", "n": "Lost Souls [H]  n=868 cos0.99 難-1.87", "s": 0.67, "f": 0}, {"x": 0.992, "y": -1.871, "c": "近傍", "n": "Super Freak [H]  n=716 cos0.99 難-1.87", "s": 0.552, "f": 0}, {"x": 0.993, "y": -1.921, "c": "近傍", "n": "響花水月 [H]  n=684 cos0.99 難-1.92", "s": 0.528, "f": 0}, {"x": 0.992, "y": -1.908, "c": "近傍", "n": "Xyndrome [H]  n=860 cos0.99 難-1.91", "s": 0.664, "f": 0}, {"x": 0.992, "y": -1.892, "c": "近傍", "n": "ウツシミウツシ [H]  n=716 cos0.99 難-1.89", "s": 0.552, "f": 0}, {"x": 0.994, "y": -1.731, "c": "近傍", "n": "VALKYRIAS -英雄誕生- [H]  n=1296 cos0.99 難-1.73", "s": 1.0, "f": 0}, {"x": 0.992, "y": -1.872, "c": "近傍", "n": "曼荼羅恋々 [H]  n=1038 cos0.99 難-1.87", "s": 0.801, "f": 0}, {"x": 0.991, "y": -1.907, "c": "近傍", "n": "輪廻の鴉 [H]  n=556 cos0.99 難-1.91", "s": 0.429, "f": 0}, {"x": 0.991, "y": -1.996, "c": "近傍", "n": "KING [H]  n=773 cos0.99 難-2.00", "s": 0.596, "f": 0}, {"x": 0.99, "y": -1.872, "c": "近傍", "n": "Garuda [H]  n=879 cos0.99 難-1.87", "s": 0.678, "f": 0}, {"x": 0.989, "y": -1.907, "c": "近傍", "n": "ミュージック・アワー [H]  n=826 cos0.99 難-1.91", "s": 0.637, "f": 0}, {"x": 0.99, "y": -1.949, "c": "近傍", "n": "ZEИITH [H]  n=566 cos0.99 難-1.95", "s": 0.437, "f": 0}, {"x": 0.99, "y": -1.958, "c": "近傍", "n": "apo:llioth [H]  n=955 cos0.99 難-1.96", "s": 0.737, "f": 0}, {"x": 0.996, "y": -1.61, "c": "近傍", "n": "Wonderland [H]  n=1089 cos1.00 難-1.61", "s": 0.84, "f": 0}, {"x": 0.991, "y": -2.04, "c": "近傍", "n": "パーフェクトイーター [H]  n=503 cos0.99 難-2.04", "s": 0.388, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.45277212447552573}, {"a": 0, "b": 2, "w": 0.37391383559903835}, {"a": 0, "b": 3, "w": 0.3206469605021006}, {"a": 0, "b": 4, "w": 0.2990098933632226}, {"a": 0, "b": 5, "w": 0.27263942312398015}, {"a": 0, "b": 6, "w": 0.1266331065604196}, {"a": 0, "b": 7, "w": 0.1968928829828127}, {"a": 0, "b": 8, "w": 0.11616845174300316}, {"a": 0, "b": 9, "w": 0.2067191368547867}, {"a": 0, "b": 10, "w": 0.17300318926369462}, {"a": 0, "b": 11, "w": 0.21083320523169913}, {"a": 0, "b": 12, "w": 0.08006910678806822}, {"a": 0, "b": 13, "w": 0.1087566714165531}, {"a": 0, "b": 14, "w": 0.1423896454902398}, {"a": 0, "b": 15, "w": 0.013335467274142476}, {"a": 0, "b": 16, "w": 0.04699802262668862}, {"a": 0, "b": 17, "w": 7.044342886786126e-11}, {"a": 0, "b": 18, "w": 0.016349581168918048}, {"a": 0, "b": 19, "w": 0.45140877339521257}, {"a": 0, "b": 20, "w": 0.15351504050861164}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.989,hiX=1.001,loY=-2.075,hiY=-1.575;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

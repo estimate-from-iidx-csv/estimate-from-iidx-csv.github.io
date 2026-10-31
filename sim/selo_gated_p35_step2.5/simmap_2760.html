@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">PARADISE LOST [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 1.856, "c": "種", "n": "PARADISE LOST [A]  n=2879 cos1.00 難1.86", "s": 0.888, "f": 0}, {"x": 0.981, "y": 1.829, "c": "近傍", "n": "COSMIC RAY [A]  n=1985 cos0.98 難1.83", "s": 0.612, "f": 0}, {"x": 0.982, "y": 1.788, "c": "近傍", "n": "Cross Fire [A]  n=948 cos0.98 難1.79", "s": 0.292, "f": 0}, {"x": 0.981, "y": 1.805, "c": "近傍", "n": "Inferno of Fomalhaut [A]  n=2584 cos0.98 難1.80", "s": 0.797, "f": 0}, {"x": 0.983, "y": 1.992, "c": "近傍", "n": "LOCUS OF THE TRAVEL [A]  n=2105 cos0.98 難1.99", "s": 0.649, "f": 0}, {"x": 0.978, "y": 1.822, "c": "近傍", "n": "NZM [A]  n=2975 cos0.98 難1.82", "s": 0.917, "f": 0}, {"x": 0.98, "y": 1.734, "c": "近傍", "n": "Reflux [A]  n=3152 cos0.98 難1.73", "s": 0.972, "f": 0}, {"x": 0.979, "y": 1.958, "c": "近傍", "n": "シムルグの目醒め [A]  n=2840 cos0.98 難1.96", "s": 0.876, "f": 0}, {"x": 0.98, "y": 2.021, "c": "近傍", "n": "REVOLVER [L]  n=1708 cos0.98 難2.02", "s": 0.527, "f": 0}, {"x": 0.981, "y": 1.674, "c": "近傍", "n": "Purple Perplex [A]  n=2233 cos0.98 難1.67", "s": 0.689, "f": 0}, {"x": 0.974, "y": 1.795, "c": "近傍", "n": "invoker [L]  n=2635 cos0.97 難1.80", "s": 0.813, "f": 0}, {"x": 0.984, "y": 2.097, "c": "近傍", "n": "LOUDER ROLLING THUNDER [A]  n=1606 cos0.98 難2.10", "s": 0.495, "f": 0}, {"x": 0.987, "y": 1.589, "c": "近傍", "n": "Flamingo [A]  n=796 cos0.99 難1.59", "s": 0.245, "f": 0}, {"x": 0.972, "y": 1.813, "c": "近傍", "n": "ECHIDNA [A]  n=3129 cos0.97 難1.81", "s": 0.965, "f": 0}, {"x": 0.973, "y": 1.965, "c": "近傍", "n": "GuNGNiR [A]  n=3073 cos0.97 難1.97", "s": 0.948, "f": 0}, {"x": 0.971, "y": 1.857, "c": "近傍", "n": "POLKAMANIA [L]  n=817 cos0.97 難1.86", "s": 0.252, "f": 0}, {"x": 0.973, "y": 1.73, "c": "近傍", "n": "ピアノ協奏曲第１番”蠍火” [A]  n=3243 cos0.97 難1.73", "s": 1.0, "f": 0}, {"x": 0.971, "y": 1.889, "c": "近傍", "n": "真 地獄超特急 -HELL or HELL- [A]  n=3048 cos0.97 難1.89", "s": 0.94, "f": 0}, {"x": 0.979, "y": 1.633, "c": "近傍", "n": "Quakes [A]  n=2875 cos0.98 難1.63", "s": 0.887, "f": 0}, {"x": 0.971, "y": 1.981, "c": "近傍", "n": "Almagest [A]  n=3148 cos0.97 難1.98", "s": 0.971, "f": 0}, {"x": 0.974, "y": 1.657, "c": "近傍", "n": "The Rebellion of Sequencer [A]  n=2719 cos0.97 難1.66", "s": 0.838, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.23369656476532374}, {"a": 0, "b": 2, "w": 0.26837573804694825}, {"a": 0, "b": 3, "w": 0.14939783175868493}, {"a": 0, "b": 4, "w": 0.15601425539438674}, {"a": 0, "b": 5, "w": 0.12500956662874363}, {"a": 0, "b": 6, "w": 0.2329311206542255}, {"a": 0, "b": 7, "w": 0.2018504684528688}, {"a": 0, "b": 8, "w": 0.16230995100087642}, {"a": 0, "b": 9, "w": 0.24368613331249156}, {"a": 0, "b": 10, "w": 0.11086486232591253}, {"a": 0, "b": 11, "w": 0.29399825238053345}, {"a": 0, "b": 12, "w": 0.39341576492118313}, {"a": 0, "b": 13, "w": 0.015013825836511674}, {"a": 0, "b": 14, "w": 2.4917179430872238e-11}, {"a": 0, "b": 15, "w": 0.04971260508191799}, {"a": 0, "b": 16, "w": 0.10619539793032362}, {"a": 0, "b": 17, "w": 0.024774016862721737}, {"a": 0, "b": 18, "w": 0.19323962384591986}, {"a": 0, "b": 19, "w": 0.054253560217168206}, {"a": 0, "b": 20, "w": 0.12962320150965922}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.968,hiX=1.002,loY=1.548,hiY=2.137;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>
