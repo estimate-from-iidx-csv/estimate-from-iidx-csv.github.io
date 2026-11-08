@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Ancient Scapes [H] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -0.38, "c": "種", "n": "Ancient Scapes [H]  n=2486 cos1.00 難-0.38", "s": 0.71, "f": 0}, {"x": 0.996, "y": -0.336, "c": "近傍", "n": "ALBIDA [H]  n=3260 cos1.00 難-0.34", "s": 0.931, "f": 0}, {"x": 0.996, "y": -0.28, "c": "近傍", "n": "Raison d'etre～交差する宿命～ [H]  n=2460 cos1.00 難-0.28", "s": 0.702, "f": 0}, {"x": 0.995, "y": -0.267, "c": "近傍", "n": "Bad Maniacs [H]  n=3255 cos1.00 難-0.27", "s": 0.929, "f": 0}, {"x": 0.995, "y": -0.249, "c": "近傍", "n": "Dances with Snow Fairies [H]  n=2892 cos1.00 難-0.25", "s": 0.826, "f": 0}, {"x": 0.993, "y": -0.381, "c": "近傍", "n": "F [H]  n=3310 cos0.99 難-0.38", "s": 0.945, "f": 0}, {"x": 0.993, "y": -0.443, "c": "近傍", "n": "DropZ-Line- [H]  n=1721 cos0.99 難-0.44", "s": 0.491, "f": 0}, {"x": 0.993, "y": -0.318, "c": "近傍", "n": "Dazzlin' Darlin-秋葉工房mix- [A]  n=3503 cos0.99 難-0.32", "s": 1.0, "f": 0}, {"x": 0.992, "y": -0.325, "c": "近傍", "n": "Anisakis -somatic mutation type\"Forza\"- [H]  n=3121 cos0.99 難-0.32", "s": 0.891, "f": 0}, {"x": 0.995, "y": -0.555, "c": "近傍", "n": "SHADE [H]  n=2549 cos1.00 難-0.56", "s": 0.728, "f": 0}, {"x": 0.992, "y": -0.306, "c": "近傍", "n": "IN THE NAME OF LOVE [A]  n=2765 cos0.99 難-0.31", "s": 0.789, "f": 0}, {"x": 0.992, "y": -0.27, "c": "近傍", "n": "高高度降下低高度開傘 [A]  n=1285 cos0.99 難-0.27", "s": 0.367, "f": 0}, {"x": 0.991, "y": -0.32, "c": "近傍", "n": "HYPER BOUNDARY GATE [A]  n=1597 cos0.99 難-0.32", "s": 0.456, "f": 0}, {"x": 0.991, "y": -0.333, "c": "近傍", "n": "Last Dance [H]  n=2699 cos0.99 難-0.33", "s": 0.77, "f": 0}, {"x": 0.995, "y": -0.177, "c": "近傍", "n": "Keep it-秋葉工房mix- [A]  n=3105 cos1.00 難-0.18", "s": 0.886, "f": 0}, {"x": 0.991, "y": -0.4, "c": "近傍", "n": "疾風迅雷 [H]  n=2794 cos0.99 難-0.40", "s": 0.798, "f": 0}, {"x": 0.991, "y": -0.322, "c": "近傍", "n": "Proof of the existence [H]  n=2876 cos0.99 難-0.32", "s": 0.821, "f": 0}, {"x": 0.992, "y": -0.495, "c": "近傍", "n": "BLUE MIRAGE [H]  n=2388 cos0.99 難-0.49", "s": 0.682, "f": 0}, {"x": 0.99, "y": -0.332, "c": "近傍", "n": "Blue Spring Express [H]  n=2400 cos0.99 難-0.33", "s": 0.685, "f": 0}, {"x": 0.991, "y": -0.478, "c": "近傍", "n": "ΕΛΠΙΣ [H]  n=3247 cos0.99 難-0.48", "s": 0.927, "f": 0}, {"x": 0.99, "y": -0.335, "c": "近傍", "n": "Shooting Fireball [H]  n=2562 cos0.99 難-0.33", "s": 0.731, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.4701297594352527}, {"a": 0, "b": 2, "w": 0.4753286743897559}, {"a": 0, "b": 3, "w": 0.43125091659792647}, {"a": 0, "b": 4, "w": 0.33902376234966247}, {"a": 0, "b": 5, "w": 0.1591577215907949}, {"a": 0, "b": 6, "w": 0.15585199848378928}, {"a": 0, "b": 7, "w": 0.2279662843949214}, {"a": 0, "b": 8, "w": 0.2953968063515725}, {"a": 0, "b": 9, "w": 0.0757940021297645}, {"a": 0, "b": 10, "w": 0.20107264422615145}, {"a": 0, "b": 11, "w": 0.1234229398778206}, {"a": 0, "b": 12, "w": 5.4736104537767005e-11}, {"a": 0, "b": 13, "w": 0.14029201628956}, {"a": 0, "b": 14, "w": 0.32929653769533684}, {"a": 0, "b": 15, "w": 0.22415944466967763}, {"a": 0, "b": 16, "w": 0.22635542338118275}, {"a": 0, "b": 17, "w": 0.2345457085446091}, {"a": 0, "b": 18, "w": 0.1767118833303386}, {"a": 0, "b": 19, "w": 0.20662821835190592}, {"a": 0, "b": 20, "w": 0.18494229962596864}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.989,hiX=1.001,loY=-0.586,hiY=-0.147;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

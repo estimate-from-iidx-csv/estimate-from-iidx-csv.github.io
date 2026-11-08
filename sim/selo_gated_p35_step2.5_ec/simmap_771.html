@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Beautiful Harmony (IIDX Mix) [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -0.009, "c": "種", "n": "Beautiful Harmony (IIDX Mix) [A]  n=2580 cos1.00 難-0.01", "s": 0.666, "f": 0}, {"x": 0.998, "y": 0.139, "c": "近傍", "n": "Set U Free feat. Kanae Asaba [A]  n=2811 cos1.00 難0.14", "s": 0.726, "f": 0}, {"x": 0.995, "y": 0.077, "c": "近傍", "n": "Blue Rain [A]  n=3739 cos0.99 難0.08", "s": 0.965, "f": 0}, {"x": 0.992, "y": -0.095, "c": "近傍", "n": "Lawes's Parotia [A]  n=2528 cos0.99 難-0.10", "s": 0.653, "f": 0}, {"x": 0.992, "y": 0.119, "c": "近傍", "n": "Harmony and Lovely [A]  n=3541 cos0.99 難0.12", "s": 0.914, "f": 0}, {"x": 0.989, "y": -0.016, "c": "近傍", "n": "quasar [A]  n=3874 cos0.99 難-0.02", "s": 1.0, "f": 0}, {"x": 0.992, "y": 0.221, "c": "近傍", "n": "Get On Your Feet [A]  n=1761 cos0.99 難0.22", "s": 0.455, "f": 0}, {"x": 0.989, "y": 0.065, "c": "近傍", "n": "X-ray binary [A]  n=2522 cos0.99 難0.07", "s": 0.651, "f": 0}, {"x": 0.99, "y": 0.173, "c": "近傍", "n": "THE TIME MACHINE [A]  n=2221 cos0.99 難0.17", "s": 0.573, "f": 0}, {"x": 0.99, "y": 0.235, "c": "近傍", "n": "Programmed World [A]  n=3471 cos0.99 難0.23", "s": 0.896, "f": 0}, {"x": 0.995, "y": 0.36, "c": "近傍", "n": "Constellation [A]  n=1134 cos0.99 難0.36", "s": 0.293, "f": 0}, {"x": 0.991, "y": 0.295, "c": "近傍", "n": "DREAM OF SPACE UFO ABDUCTION [A]  n=2433 cos0.99 難0.30", "s": 0.628, "f": 0}, {"x": 0.988, "y": -0.136, "c": "近傍", "n": "罪と罰 [A]  n=3503 cos0.99 難-0.14", "s": 0.904, "f": 0}, {"x": 0.988, "y": 0.175, "c": "近傍", "n": "超青少年ノ為ノ超多幸ナ超古典的超舞曲 [A]  n=3656 cos0.99 難0.18", "s": 0.944, "f": 0}, {"x": 0.988, "y": -0.255, "c": "近傍", "n": "V [H]  n=3526 cos0.99 難-0.25", "s": 0.91, "f": 0}, {"x": 0.987, "y": -0.195, "c": "近傍", "n": "Timepiece phase II [H]  n=2933 cos0.99 難-0.19", "s": 0.757, "f": 0}, {"x": 0.988, "y": 0.216, "c": "近傍", "n": "SPACE FIGHT [A]  n=3372 cos0.99 難0.22", "s": 0.87, "f": 0}, {"x": 0.986, "y": 0.138, "c": "近傍", "n": "Programmed Genom [A]  n=2257 cos0.99 難0.14", "s": 0.583, "f": 0}, {"x": 0.99, "y": 0.319, "c": "近傍", "n": "Programmed Sun [A]  n=3329 cos0.99 難0.32", "s": 0.859, "f": 0}, {"x": 0.987, "y": -0.233, "c": "近傍", "n": "Scripted Connection⇒ A mix [H]  n=2644 cos0.99 難-0.23", "s": 0.682, "f": 0}, {"x": 0.986, "y": -0.164, "c": "近傍", "n": "The Sky of Sadness [A]  n=2249 cos0.99 難-0.16", "s": 0.581, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.6869433176015968}, {"a": 0, "b": 2, "w": 0.45472616239092123}, {"a": 0, "b": 3, "w": 0.2916195802017313}, {"a": 0, "b": 4, "w": 0.3271511838437643}, {"a": 0, "b": 5, "w": 0.3051113650686442}, {"a": 0, "b": 6, "w": 4.370526163199884e-11}, {"a": 0, "b": 7, "w": 0.17893814576571365}, {"a": 0, "b": 8, "w": 0.13664402717184287}, {"a": 0, "b": 9, "w": 0.2791096815686378}, {"a": 0, "b": 10, "w": 0.2671078571852058}, {"a": 0, "b": 11, "w": 0.29547246737782284}, {"a": 0, "b": 12, "w": 0.2146599496252558}, {"a": 0, "b": 13, "w": 0.2765805745738774}, {"a": 0, "b": 14, "w": 0.28529552474418496}, {"a": 0, "b": 15, "w": 0.1798477722469577}, {"a": 0, "b": 16, "w": 0.2322571243605568}, {"a": 0, "b": 17, "w": 0.22049835758073388}, {"a": 0, "b": 18, "w": 0.17280394216311246}, {"a": 0, "b": 19, "w": 0.24402235065548605}, {"a": 0, "b": 20, "w": 0.21657241210375133}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.985,hiX=1.001,loY=-0.304,hiY=0.409;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

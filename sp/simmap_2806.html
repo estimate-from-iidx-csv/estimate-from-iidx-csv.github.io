@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">RUINA [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 1.638, "c": "種", "n": "RUINA [A]  n=436 cos1.00 難1.64", "s": 0.135, "f": 0}, {"x": 0.935, "y": 1.816, "c": "近傍", "n": "DIAVOLO [A]  n=3016 cos0.93 難1.82", "s": 0.933, "f": 0}, {"x": 0.93, "y": 1.86, "c": "近傍", "n": "Thor's Hammer [A]  n=2881 cos0.93 難1.86", "s": 0.892, "f": 0}, {"x": 0.789, "y": 1.448, "c": "近傍", "n": "⁽⁽ଘ( ˙꒳˙ )ଓ⁾⁾ beyond reason [A]  n=794 cos0.79 難1.45", "s": 0.246, "f": 0}, {"x": 0.768, "y": 1.702, "c": "近傍", "n": "駅猫のワルツ [A]  n=2780 cos0.77 難1.70", "s": 0.86, "f": 0}, {"x": 0.789, "y": 1.411, "c": "近傍", "n": "ChaserXX [L]  n=686 cos0.79 難1.41", "s": 0.212, "f": 0}, {"x": 0.778, "y": 2.052, "c": "近傍", "n": "Mare Nectaris [A]  n=2754 cos0.78 難2.05", "s": 0.852, "f": 0}, {"x": 0.743, "y": 1.291, "c": "近傍", "n": "Inferno of Fomalhaut [A]  n=2572 cos0.74 難1.29", "s": 0.796, "f": 0}, {"x": 0.703, "y": 1.824, "c": "近傍", "n": "Carmina [A]  n=2506 cos0.70 難1.82", "s": 0.776, "f": 0}, {"x": 0.726, "y": 1.31, "c": "近傍", "n": "ピアノ協奏曲第１番”蠍火” [A]  n=3231 cos0.73 難1.31", "s": 1.0, "f": 0}, {"x": 0.718, "y": 1.936, "c": "近傍", "n": "EROICA [A]  n=2446 cos0.72 難1.94", "s": 0.757, "f": 0}, {"x": 0.686, "y": 1.722, "c": "近傍", "n": "色を喪った街 [A]  n=606 cos0.69 難1.72", "s": 0.188, "f": 0}, {"x": 0.681, "y": 1.742, "c": "近傍", "n": "perditus†paradisus [A]  n=2865 cos0.68 難1.74", "s": 0.887, "f": 0}, {"x": 0.676, "y": 1.586, "c": "近傍", "n": "Amor∞Fati [A]  n=542 cos0.68 難1.59", "s": 0.168, "f": 0}, {"x": 0.658, "y": 1.504, "c": "近傍", "n": "The Clown of 24stairs [A]  n=1693 cos0.66 難1.50", "s": 0.524, "f": 0}, {"x": 0.674, "y": 1.368, "c": "近傍", "n": "COSMIC RAY [A]  n=1971 cos0.67 難1.37", "s": 0.61, "f": 0}, {"x": 0.675, "y": 2.019, "c": "近傍", "n": "Somnidiscotheque [A]  n=1462 cos0.68 難2.02", "s": 0.452, "f": 0}, {"x": 0.627, "y": 1.701, "c": "近傍", "n": "天使のカンタータ -Cantata of Angels- [A]  n=1039 cos0.63 難1.70", "s": 0.322, "f": 0}, {"x": 0.665, "y": 2.001, "c": "近傍", "n": "Illegal Function Call [L]  n=1228 cos0.67 難2.00", "s": 0.38, "f": 0}, {"x": 0.673, "y": 2.039, "c": "近傍", "n": "SμG@R RU$# [A]  n=791 cos0.67 難2.04", "s": 0.245, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.5877127541739395}, {"a": 0, "b": 2, "w": 0.511411439431986}, {"a": 0, "b": 3, "w": 0.3524721151795115}, {"a": 0, "b": 4, "w": 0.2633169551932818}, {"a": 0, "b": 5, "w": 0.33614537379497644}, {"a": 0, "b": 6, "w": 0.1208097193498725}, {"a": 0, "b": 7, "w": 0.34013738138402116}, {"a": 0, "b": 8, "w": 0.24839009977726278}, {"a": 0, "b": 9, "w": 0.3278101829313077}, {"a": 0, "b": 10, "w": 0.0035857737537967616}, {"a": 0, "b": 11, "w": 0.10629938770604519}, {"a": 0, "b": 12, "w": 0.15766834425565435}, {"a": 0, "b": 13, "w": 0.22886419392437163}, {"a": 0, "b": 14, "w": 0.1633527890752715}, {"a": 0, "b": 15, "w": 0.22701079006998914}, {"a": 0, "b": 16, "w": 0.27842494481362656}, {"a": 0, "b": 17, "w": 2.1515522696802236e-10}, {"a": 0, "b": 18, "w": 0.20830743501533255}, {"a": 0, "b": 19, "w": 0.0025233425260582365}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.598,hiX=1.030,loY=1.230,hiY=2.113;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

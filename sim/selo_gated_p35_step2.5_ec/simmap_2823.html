@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Sinus Iridum [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 2.747, "c": "種", "n": "Sinus Iridum [A]  n=1844 cos1.00 難2.75", "s": 0.641, "f": 0}, {"x": 0.965, "y": 2.846, "c": "近傍", "n": "TRANOID [L]  n=1598 cos0.96 難2.85", "s": 0.555, "f": 0}, {"x": 0.976, "y": 3.107, "c": "近傍", "n": "惑星鉄道 [A]  n=1102 cos0.98 難3.11", "s": 0.383, "f": 0}, {"x": 0.947, "y": 2.82, "c": "近傍", "n": "FiZZλ_POT!0N [A]  n=590 cos0.95 難2.82", "s": 0.205, "f": 0}, {"x": 0.949, "y": 2.618, "c": "近傍", "n": "Carmina [A]  n=2518 cos0.95 難2.62", "s": 0.875, "f": 0}, {"x": 0.976, "y": 2.355, "c": "近傍", "n": "TITANS RETURN [L]  n=1943 cos0.98 難2.36", "s": 0.675, "f": 0}, {"x": 0.954, "y": 3.099, "c": "近傍", "n": "n/a [A]  n=1652 cos0.95 難3.10", "s": 0.574, "f": 0}, {"x": 0.938, "y": 2.554, "c": "近傍", "n": "perditus†paradisus [A]  n=2878 cos0.94 難2.55", "s": 1.0, "f": 0}, {"x": 0.94, "y": 2.519, "c": "近傍", "n": "Go Ahead!! [A]  n=2713 cos0.94 難2.52", "s": 0.943, "f": 0}, {"x": 0.952, "y": 2.372, "c": "近傍", "n": "Binary Black Hole [A]  n=1876 cos0.95 難2.37", "s": 0.652, "f": 0}, {"x": 0.972, "y": 3.228, "c": "近傍", "n": "Somnidiscotheque [A]  n=1472 cos0.97 難3.23", "s": 0.511, "f": 0}, {"x": 0.953, "y": 2.342, "c": "近傍", "n": "Everlasting Message [A]  n=2265 cos0.95 難2.34", "s": 0.787, "f": 0}, {"x": 0.928, "y": 2.788, "c": "近傍", "n": "XHRONOXAPSULΞ [A]  n=719 cos0.93 難2.79", "s": 0.25, "f": 0}, {"x": 0.94, "y": 2.427, "c": "近傍", "n": "VOID [A]  n=1272 cos0.94 難2.43", "s": 0.442, "f": 0}, {"x": 0.925, "y": 2.738, "c": "近傍", "n": "卑弥呼 [A]  n=2768 cos0.93 難2.74", "s": 0.962, "f": 0}, {"x": 0.936, "y": 2.452, "c": "近傍", "n": "MEGAERA [A]  n=2101 cos0.94 難2.45", "s": 0.73, "f": 0}, {"x": 0.925, "y": 2.59, "c": "近傍", "n": "お米の美味しい炊き方、そしてお米を食べることによるその効果。 [L]  n=1799 cos0.93 難2.59", "s": 0.625, "f": 0}, {"x": 0.93, "y": 2.494, "c": "近傍", "n": "天使のカンタータ -Cantata of Angels- [A]  n=1055 cos0.93 難2.49", "s": 0.367, "f": 0}, {"x": 0.944, "y": 2.331, "c": "近傍", "n": "蛇神 [L]  n=839 cos0.94 難2.33", "s": 0.292, "f": 0}, {"x": 0.942, "y": 3.146, "c": "近傍", "n": "Illegal Function Call [L]  n=1237 cos0.94 難3.15", "s": 0.43, "f": 0}, {"x": 0.923, "y": 2.847, "c": "近傍", "n": "Beyond Evolution [A]  n=1464 cos0.92 難2.85", "s": 0.509, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.30048952441168253}, {"a": 0, "b": 2, "w": 0.40258798867678536}, {"a": 0, "b": 3, "w": 0.22341013684320654}, {"a": 0, "b": 4, "w": 0.23541449976929107}, {"a": 0, "b": 5, "w": 0.3485480693786758}, {"a": 0, "b": 6, "w": 0.2627021867303444}, {"a": 0, "b": 7, "w": 0.16073301282131103}, {"a": 0, "b": 8, "w": 0.15581685015375957}, {"a": 0, "b": 9, "w": 0.2536181609853052}, {"a": 0, "b": 10, "w": 0.387800187191468}, {"a": 0, "b": 11, "w": 0.26456947467199177}, {"a": 0, "b": 12, "w": 0.09855235442272625}, {"a": 0, "b": 13, "w": 0.1501642109191429}, {"a": 0, "b": 14, "w": 0.050113498715577576}, {"a": 0, "b": 15, "w": 0.13845601085714332}, {"a": 0, "b": 16, "w": 0.07638311351473626}, {"a": 0, "b": 17, "w": 0.11044562507189815}, {"a": 0, "b": 18, "w": 0.2028815630754034}, {"a": 0, "b": 19, "w": 0.18428861985928569}, {"a": 0, "b": 20, "w": 1.2633449841814581e-11}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.916,hiX=1.006,loY=2.259,hiY=3.299;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

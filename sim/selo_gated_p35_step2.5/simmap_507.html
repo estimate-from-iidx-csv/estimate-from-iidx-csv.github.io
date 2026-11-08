@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">Sarutobi Champion is 拙者 [H] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": -1.065, "c": "種", "n": "Sarutobi Champion is 拙者 [H]  n=1114 cos1.00 難-1.07", "s": 0.368, "f": 0}, {"x": 0.99, "y": -1.048, "c": "近傍", "n": "HADES [H]  n=2413 cos0.99 難-1.05", "s": 0.796, "f": 0}, {"x": 0.988, "y": -1.167, "c": "近傍", "n": "SCHWARZSCHILD FIELD [H]  n=1540 cos0.99 難-1.17", "s": 0.508, "f": 0}, {"x": 0.989, "y": -1.213, "c": "近傍", "n": "Inner Spirit [H]  n=1473 cos0.99 難-1.21", "s": 0.486, "f": 0}, {"x": 0.986, "y": -1.158, "c": "近傍", "n": "セロトニン [H]  n=1490 cos0.99 難-1.16", "s": 0.492, "f": 0}, {"x": 0.986, "y": -0.989, "c": "近傍", "n": "Inferno of Fomalhaut [H]  n=1774 cos0.99 難-0.99", "s": 0.585, "f": 0}, {"x": 0.984, "y": -1.04, "c": "近傍", "n": "Vulnerability [H]  n=664 cos0.98 難-1.04", "s": 0.219, "f": 0}, {"x": 0.984, "y": -1.134, "c": "近傍", "n": "The Least 100sec [H]  n=1574 cos0.98 難-1.13", "s": 0.519, "f": 0}, {"x": 0.984, "y": -1.14, "c": "近傍", "n": "T-REX vs Velociraptor (In the Far east euphoria) [H]  n=1582 cos0.98 難-1.14", "s": 0.522, "f": 0}, {"x": 0.983, "y": -1.095, "c": "近傍", "n": "東京神話 [H]  n=1949 cos0.98 難-1.09", "s": 0.643, "f": 0}, {"x": 0.984, "y": -0.976, "c": "近傍", "n": "Cosmic Cat [H]  n=1851 cos0.98 難-0.98", "s": 0.611, "f": 0}, {"x": 0.99, "y": -1.274, "c": "近傍", "n": "chaos eater -IIDX edition- [H]  n=1217 cos0.99 難-1.27", "s": 0.402, "f": 0}, {"x": 0.983, "y": -1.124, "c": "近傍", "n": "Night sky [H]  n=2107 cos0.98 難-1.12", "s": 0.695, "f": 0}, {"x": 0.986, "y": -0.898, "c": "近傍", "n": "255 [H]  n=1429 cos0.99 難-0.90", "s": 0.471, "f": 0}, {"x": 0.981, "y": -1.028, "c": "近傍", "n": "& Intelligence [H]  n=1407 cos0.98 難-1.03", "s": 0.464, "f": 0}, {"x": 0.982, "y": -0.987, "c": "近傍", "n": "Illegal Function Call [H]  n=2006 cos0.98 難-0.99", "s": 0.662, "f": 0}, {"x": 0.981, "y": -1.034, "c": "近傍", "n": "CODE:1 [revision1.0.1] [H]  n=1646 cos0.98 難-1.03", "s": 0.543, "f": 0}, {"x": 0.982, "y": -1.171, "c": "近傍", "n": "Bring The Fire [H]  n=669 cos0.98 難-1.17", "s": 0.221, "f": 0}, {"x": 0.992, "y": -0.814, "c": "近傍", "n": "The Sampling Paradise [H]  n=3031 cos0.99 難-0.81", "s": 1.0, "f": 0}, {"x": 0.981, "y": -1.111, "c": "近傍", "n": "Arca [H]  n=1546 cos0.98 難-1.11", "s": 0.51, "f": 0}, {"x": 0.98, "y": -1.033, "c": "近傍", "n": "FlyAway [H]  n=630 cos0.98 難-1.03", "s": 0.208, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.47374803758722805}, {"a": 0, "b": 2, "w": 0.44483176480066433}, {"a": 0, "b": 3, "w": 0.440130324369286}, {"a": 0, "b": 4, "w": 0.40207589991434056}, {"a": 0, "b": 5, "w": 0.34483068401512484}, {"a": 0, "b": 6, "w": 3.910360923953249e-11}, {"a": 0, "b": 7, "w": 0.2940341417824276}, {"a": 0, "b": 8, "w": 0.3288301440606778}, {"a": 0, "b": 9, "w": 0.329340931424276}, {"a": 0, "b": 10, "w": 0.3236073535574341}, {"a": 0, "b": 11, "w": 0.4786767770239283}, {"a": 0, "b": 12, "w": 0.325066627070947}, {"a": 0, "b": 13, "w": 0.3799564927882937}, {"a": 0, "b": 14, "w": 0.14581828471559288}, {"a": 0, "b": 15, "w": 0.2502002052667667}, {"a": 0, "b": 16, "w": 0.27160328443372395}, {"a": 0, "b": 17, "w": 0.3085486625728814}, {"a": 0, "b": 18, "w": 0.5207018569998618}, {"a": 0, "b": 19, "w": 0.2751789590290261}, {"a": 0, "b": 20, "w": 0.022983348565274175}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.979,hiX=1.002,loY=-1.310,hiY=-0.778;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">禊 [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β1.4·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 0.349, "c": "種", "n": "禊 [A]  n=2596 cos1.00 難0.35", "s": 0.734, "f": 0}, {"x": 0.862, "y": 0.497, "c": "近傍", "n": "ハイテックトキオ [L]  n=2015 cos0.86 難0.50", "s": 0.569, "f": 0}, {"x": 0.785, "y": 0.267, "c": "近傍", "n": "Ou Legends [A]  n=1986 cos0.79 難0.27", "s": 0.561, "f": 0}, {"x": 0.81, "y": 0.734, "c": "近傍", "n": "DIAMOND CROSSING [A]  n=3296 cos0.81 難0.73", "s": 0.931, "f": 0}, {"x": 0.763, "y": 0.35, "c": "近傍", "n": "GIGANT [L]  n=1738 cos0.76 難0.35", "s": 0.491, "f": 0}, {"x": 0.752, "y": 0.166, "c": "近傍", "n": "TOGAKUSHI [A]  n=3535 cos0.75 難0.17", "s": 0.999, "f": 0}, {"x": 0.809, "y": 0.83, "c": "近傍", "n": "烽火連天の刃 [A]  n=2061 cos0.81 難0.83", "s": 0.582, "f": 0}, {"x": 0.77, "y": 0.706, "c": "近傍", "n": "chaplet -IIDX re:build- [A]  n=882 cos0.77 難0.71", "s": 0.249, "f": 0}, {"x": 0.721, "y": 0.373, "c": "近傍", "n": "Million Dollar [A]  n=1547 cos0.72 難0.37", "s": 0.437, "f": 0}, {"x": 0.796, "y": -0.173, "c": "近傍", "n": "神のシナリオ [A]  n=2033 cos0.80 難-0.17", "s": 0.574, "f": 0}, {"x": 0.745, "y": 0.732, "c": "近傍", "n": "ミラージュ・レジデンス [L]  n=1854 cos0.74 難0.73", "s": 0.524, "f": 0}, {"x": 0.735, "y": 0.0, "c": "近傍", "n": "Star Trail [L]  n=1133 cos0.73 難0.00", "s": 0.32, "f": 0}, {"x": 0.719, "y": 0.595, "c": "近傍", "n": "SOLID STATE SQUAD -RISEN RELIC REMIX- [A]  n=2495 cos0.72 難0.60", "s": 0.705, "f": 0}, {"x": 0.707, "y": 0.55, "c": "近傍", "n": "Triple Cross [A]  n=2532 cos0.71 難0.55", "s": 0.715, "f": 0}, {"x": 0.713, "y": 0.689, "c": "近傍", "n": "Flashes [A]  n=3295 cos0.71 難0.69", "s": 0.931, "f": 0}, {"x": 0.849, "y": 1.109, "c": "近傍", "n": "REVOLVER [L]  n=1699 cos0.85 難1.11", "s": 0.48, "f": 0}, {"x": 0.69, "y": 0.131, "c": "近傍", "n": "CALL [L]  n=876 cos0.69 難0.13", "s": 0.248, "f": 0}, {"x": 0.703, "y": 0.006, "c": "近傍", "n": "Summerlights(IIDX Edition) [A]  n=3539 cos0.70 難0.01", "s": 1.0, "f": 0}, {"x": 0.735, "y": 0.872, "c": "近傍", "n": "Unbelief [A]  n=2699 cos0.74 難0.87", "s": 0.763, "f": 0}, {"x": 0.696, "y": 0.686, "c": "近傍", "n": "深淵に捧ぐレクイエム [A]  n=2924 cos0.70 難0.69", "s": 0.826, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 19}], E=[{"a": 0, "b": 1, "w": 0.7232250861047325}, {"a": 0, "b": 2, "w": 0.6110345076847385}, {"a": 0, "b": 3, "w": 0.40538658697759045}, {"a": 0, "b": 4, "w": 0.1671867979572036}, {"a": 0, "b": 5, "w": 0.07277707796190458}, {"a": 0, "b": 6, "w": 0.3014699623535302}, {"a": 0, "b": 7, "w": 0.40321141814319483}, {"a": 0, "b": 8, "w": 0.6020500276069484}, {"a": 0, "b": 9, "w": 0.17340110925973973}, {"a": 0, "b": 10, "w": 0.23250723716972055}, {"a": 0, "b": 11, "w": 0.30734228058363156}, {"a": 0, "b": 12, "w": 0.5679548070772464}, {"a": 0, "b": 13, "w": 0.5548933999922696}, {"a": 0, "b": 14, "w": 0.44474296996399765}, {"a": 0, "b": 15, "w": 0.19901606161856455}, {"a": 0, "b": 16, "w": 2.651339148229681e-10}, {"a": 0, "b": 17, "w": 0.6085586418049284}, {"a": 0, "b": 18, "w": 0.397102701659545}, {"a": 0, "b": 19, "w": 0.09618935047939459}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.665,hiX=1.025,loY=-0.276,hiY=1.211;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

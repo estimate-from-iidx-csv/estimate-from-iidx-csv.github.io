@@ -1,0 +1,54 @@
+<style>
+ body{font-family:system-ui,sans-serif;margin:0;background:#fff;color:#222}
+ #wrap{max-width:1040px;margin:0 auto;padding:12px}
+ #tip{position:fixed;pointer-events:none;background:#111;color:#fff;padding:4px 7px;
+   border-radius:4px;font-size:12px;opacity:0;transition:opacity .05s;white-space:nowrap;z-index:9}
+ .lg{display:inline-block;margin-right:14px;font-size:13px;cursor:pointer;user-select:none}
+ .lg.off{opacity:.3}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+</style>
+<div id="wrap">
+ <h2 style="margin:.2em 0;font-size:16px">MENTAL MELTDOWN [A] 近傍マップ</h2>
+ <div id="legend"></div>
+ <div id="plot"></div>
+ <p style="color:#666;font-size:12px">選抜=総合類似度√(cos²+β3.0·難²) / 横=cos(右=型近) 縦=HC難易度(s50(実測・必要☆12地力),上=難) / エッジ太=特徴euclid近 / 径=プレー人数(≥500)</p>
+</div>
+<div id="tip"></div>
+<script>
+const D=[{"x": 1.0, "y": 0.751, "c": "種", "n": "MENTAL MELTDOWN [A]  n=3299 cos1.00 難0.75", "s": 0.886, "f": 0}, {"x": 0.984, "y": 0.695, "c": "近傍", "n": "Spica [A]  n=3302 cos0.98 難0.69", "s": 0.886, "f": 0}, {"x": 0.985, "y": 0.899, "c": "近傍", "n": "one or eight [A]  n=3564 cos0.98 難0.90", "s": 0.957, "f": 0}, {"x": 0.985, "y": 0.921, "c": "近傍", "n": "Scripted Connection⇒ H mix [L]  n=1418 cos0.99 難0.92", "s": 0.381, "f": 0}, {"x": 0.98, "y": 0.71, "c": "近傍", "n": "V [A]  n=3651 cos0.98 難0.71", "s": 0.98, "f": 0}, {"x": 0.976, "y": 0.794, "c": "近傍", "n": "Persephone [A]  n=3438 cos0.98 難0.79", "s": 0.923, "f": 0}, {"x": 0.977, "y": 0.862, "c": "近傍", "n": "Colors (radio edit) [A]  n=3591 cos0.98 難0.86", "s": 0.964, "f": 0}, {"x": 0.984, "y": 0.469, "c": "近傍", "n": "創世ノート [A]  n=3282 cos0.98 難0.47", "s": 0.881, "f": 0}, {"x": 0.975, "y": 0.908, "c": "近傍", "n": "The Least 100sec [A]  n=3395 cos0.98 難0.91", "s": 0.911, "f": 0}, {"x": 0.973, "y": 0.796, "c": "近傍", "n": "ALBIDA [A]  n=3570 cos0.97 難0.80", "s": 0.958, "f": 0}, {"x": 0.972, "y": 0.702, "c": "近傍", "n": "SCHWARZSCHILD FIELD [A]  n=3217 cos0.97 難0.70", "s": 0.864, "f": 0}, {"x": 0.975, "y": 0.568, "c": "近傍", "n": "tripping contact(teranoid&MC Natsack Remix) [A]  n=3059 cos0.98 難0.57", "s": 0.821, "f": 0}, {"x": 0.988, "y": 1.128, "c": "近傍", "n": "PLEASE DON'T GO [A]  n=3222 cos0.99 難1.13", "s": 0.865, "f": 0}, {"x": 0.971, "y": 0.86, "c": "近傍", "n": "HYPE THE CORE [A]  n=3106 cos0.97 難0.86", "s": 0.834, "f": 0}, {"x": 0.97, "y": 0.668, "c": "近傍", "n": "FIRE FIRE [A]  n=3658 cos0.97 難0.67", "s": 0.982, "f": 0}, {"x": 0.972, "y": 0.591, "c": "近傍", "n": "雪月花 [A]  n=3725 cos0.97 難0.59", "s": 1.0, "f": 0}, {"x": 0.971, "y": 0.883, "c": "近傍", "n": "天邪鬼 [A]  n=2445 cos0.97 難0.88", "s": 0.656, "f": 0}, {"x": 0.969, "y": 0.756, "c": "近傍", "n": "moon_child [A]  n=3574 cos0.97 難0.76", "s": 0.959, "f": 0}, {"x": 0.972, "y": 0.553, "c": "近傍", "n": "gigadelic [A]  n=3542 cos0.97 難0.55", "s": 0.951, "f": 0}, {"x": 0.988, "y": 0.34, "c": "近傍", "n": "The Dirty of Loudness [A]  n=3536 cos0.99 難0.34", "s": 0.949, "f": 0}, {"x": 0.969, "y": 0.908, "c": "近傍", "n": "oratio [A]  n=3448 cos0.97 難0.91", "s": 0.926, "f": 0}], C={"種": "#e33", "近傍": "#5a9bd4"}, LG=[{"c": "種", "label": "種", "n": 1}, {"c": "近傍", "label": "近傍", "n": 20}], E=[{"a": 0, "b": 1, "w": 0.22863295298541542}, {"a": 0, "b": 2, "w": 0.38183062023318604}, {"a": 0, "b": 3, "w": 0.3815299273120336}, {"a": 0, "b": 4, "w": 0.33024893259206123}, {"a": 0, "b": 5, "w": 0.29463529216197615}, {"a": 0, "b": 6, "w": 0.1897210944029174}, {"a": 0, "b": 7, "w": 0.3310976104791741}, {"a": 0, "b": 8, "w": 0.3005874785440402}, {"a": 0, "b": 9, "w": 0.25211036987310076}, {"a": 0, "b": 10, "w": 0.16486096143657436}, {"a": 0, "b": 11, "w": 2.1562418517362403e-11}, {"a": 0, "b": 12, "w": 0.2601512898085566}, {"a": 0, "b": 13, "w": 0.2325448911090574}, {"a": 0, "b": 14, "w": 0.19380365313732884}, {"a": 0, "b": 15, "w": 0.1823704984695892}, {"a": 0, "b": 16, "w": 0.23839372108005608}, {"a": 0, "b": 17, "w": 0.10874240340424912}, {"a": 0, "b": 18, "w": 0.09547376495341464}, {"a": 0, "b": 19, "w": 0.5119974526482354}, {"a": 0, "b": 20, "w": 0.15399568622731474}], DIAG=false;
+const svg=document.getElementById("plot"),tip=document.getElementById("tip");
+const W=1000,H=720,M=56;
+const loX=0.966,hiX=1.002,loY=0.277,hiY=1.191;
+const X=v=>M+(v-loX)/(hiX-loX)*(W-2*M), Y=v=>H-M-(v-loY)/(hiY-loY)*(H-2*M);
+const d0=Math.max(loX,loY),d1=Math.min(hiX,hiY);
+const hasSize=D.some(d=>d.s>0);
+const off={};
+function draw(){
+ let g=`<line x1=${M} y1=${H-M} x2=${W-M} y2=${H-M} stroke="#999"/>`+
+  `<line x1=${M} y1=${M} x2=${M} y2=${H-M} stroke="#999"/>`+
+  (DIAG?`<line x1=${X(d0)} y1=${Y(d0)} x2=${X(d1)} y2=${Y(d1)} stroke="#ccc" stroke-dasharray="4 4"/>`:``)+
+  `<text x=${W/2} y=${H-16} text-anchor="middle" font-size=13>コサイン類似度(右=型が近い)</text>`+
+  `<text transform="translate(16,${H/2}) rotate(-90)" text-anchor="middle" font-size=13>HC難易度 s50(必要☆12地力,上=難)</text>`;
+ for(const e of E){const a=D[e.a],b=D[e.b]; if(off[a.c]||off[b.c])continue;
+   g+=`<line x1=${X(a.x).toFixed(1)} y1=${Y(a.y).toFixed(1)} x2=${X(b.x).toFixed(1)} y2=${Y(b.y).toFixed(1)} stroke="#5a6" stroke-opacity="0.45" stroke-width="${(0.5+e.w*6).toFixed(1)}"/>`;}
+ for(let i=0;i<D.length;i++){const d=D[i]; if(off[d.c])continue;
+   const col=C[d.c]||"#888", cx=X(d.x).toFixed(1), cy=Y(d.y).toFixed(1);
+   const r=(hasSize?2+Math.sqrt(d.s)*9:3.4).toFixed(1);
+   g+=`<circle cx=${cx} cy=${cy} r=${r} fill="${col}" fill-opacity=${d.f?0.15:0.5} stroke="none" data-i="${i}"/>`;}
+ // div に <svg> ラッパごと innerHTML する(svg要素へ直接 innerHTML は namespace 未適用で描画されない環境がある)
+ svg.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${g}</svg>`;
+}
+draw();
+document.getElementById("legend").innerHTML=LG.map(l=>
+  `<span class=lg data-c="${l.c}"><span class=sw style="background:${C[l.c]||'#888'}"></span>${l.label} (${l.n})</span>`).join("")+
+  `<span class=lg style="cursor:default">計${D.length}</span>`;
+document.getElementById("legend").addEventListener("click",e=>{
+  const s=e.target.closest(".lg"); if(!s||!s.dataset.c)return;
+  off[s.dataset.c]=!off[s.dataset.c]; s.classList.toggle("off"); draw();});
+svg.addEventListener("mousemove",e=>{const t=e.target;
+  if(t.tagName==="circle"&&t.dataset.i){const d=D[+t.dataset.i];
+    tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px";
+    tip.textContent=`${d.n}  (${d.x}, ${d.y})`;}
+  else tip.style.opacity=0;});
+svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+</script>

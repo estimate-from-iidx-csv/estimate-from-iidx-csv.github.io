@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IIDXのプレーデータCSVをアップロードすると予測してくるやつ(β)</title>
+  <link rel="stylesheet" href="site.css">
+  <style>
+    :root {
+      --bg: #14161a;
+      --panel: #1c2026;
+      --panel-2: #232831;
+      --fg: #e7ebf0;
+      --muted: #9aa4b2;
+      --accent: #4fa3ff;
+      --accent-2: #7c5cff;
+      --ok: #4ec98a;
+      --err: #ff6b6b;
+      --border: #2d333d;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: .9rem; margin: 0 0 24px; }
+    .notice { background: #20283a; border: 1px solid var(--accent); border-radius: 10px;
+      padding: 12px 16px; margin: 0 0 20px; font-size: .92rem; line-height: 1.6; }
+    .notice b { color: var(--accent); }
+    /* お知らせは折りたたみ(既定:閉)。存在感を抑え、開いた時だけ中身を出す。 */
+    .notice-acc { background: #1a2030; border: 1px solid var(--border); border-radius: 10px;
+      padding: 4px 14px; margin: 0 0 18px; font-size: .9rem; }
+    .notice-acc > summary { cursor: pointer; color: var(--muted); font-size: .88rem; padding: 8px 0;
+      list-style: none; user-select: none; }
+    .notice-acc > summary::-webkit-details-marker { display: none; }
+    .notice-acc > summary::before { content: "▸"; color: var(--accent); margin-right: 6px; }
+    .notice-acc[open] > summary::before { content: "▾"; }
+    .notice-acc[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .notice-acc .sec { margin: 12px 0; line-height: 1.6; }
+    .notice-acc .sec ul { margin: 6px 0 0; padding-left: 1.2em; line-height: 1.7; }
+    /* 【変更案】いま採点に使われるモデルの版。結果カードでなく入力欄側に置く(理由はJSのコメント) */
+    .model-badge { color: var(--muted); font-size: .78rem; border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 10px; }
+    .notice-acc .sec-h { display: block; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+    .notice-acc b { color: var(--accent); }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; margin-bottom: 20px; }
+    label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+    .drop { border: 2px dashed var(--border); border-radius: 10px; padding: 28px 16px;
+      text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+      background: var(--panel-2); }
+    .drop.drag { border-color: var(--accent); background: #20283a; }
+    .drop input { display: none; }
+    .hint { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+    .drop .hint { margin-top: 6px; }
+    .filename { margin-top: 12px; font-size: .9rem; }
+    /* 入力方式タブ (ファイル / テキスト貼り付け) */
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab { flex: 0 0 auto; padding: 8px 16px; font-size: .85rem; font-weight: 600;
+      background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 8px; }
+    .tab.active { color: var(--fg); border-color: var(--accent); background: #20283a; }
+    #panel-text textarea { width: 100%; font: inherit; padding: 10px 12px; resize: vertical;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--fg);
+      line-height: 1.5; }
+    #panel-text input[type=text] { width: 100%; font: inherit; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--fg); }
+    #panel-text textarea:focus, #panel-text input[type=text]:focus { outline: none; border-color: var(--accent); }
+    .req { color: var(--err); font-size: .72rem; margin-left: 6px; }
+    /* 既存結果ビューア */
+    .viewer .row2 { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .viewer input[type=text] { flex: 1 1 180px; min-width: 160px; font: inherit; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--fg); }
+    .viewer input[type=text]:focus { outline: none; border-color: var(--accent); }
+    .viewer button.ghost { background: none; border: 1px solid var(--accent); color: var(--accent); }
+    /* 学習対象セレクタ */
+    .target { margin-top: 18px; }
+    .target .grp { margin-top: 10px; }
+    .target .grp > span { display: inline-block; min-width: 4.5em; color: var(--muted); font-size: .8rem; vertical-align: middle; }
+    .chips { display: inline-flex; gap: 8px; flex-wrap: wrap; vertical-align: middle; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-2);
+      font-size: .85rem; transition: border-color .12s, background .12s, color .12s; }
+    .chip input { accent-color: var(--accent); margin: 0; }
+    .chip:has(input:checked) { border-color: var(--accent); background: #20283a; color: var(--fg); }
+    .chip:not(:has(input:checked)) { color: var(--muted); }
+    .target .est { margin-top: 10px; font-size: .8rem; color: var(--muted); }
+    button { font: inherit; cursor: pointer; border: none; border-radius: 8px; padding: 10px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 600; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+    .msg { font-size: .9rem; }
+    .msg.err { color: var(--err); }
+    .msg.ok { color: var(--ok); }
+    .msg.muted { color: var(--muted); }
+    /* spinner */
+    .status { display: none; align-items: center; gap: 12px; margin-top: 4px; }
+    .status.show { display: flex; }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: 0 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status .label { font-size: .95rem; }
+    .status .qpos { color: var(--muted); font-size: .85rem; }
+    /* result */
+    #result { display: none; }
+    #result.show { display: block; }
+    .result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+    .result-head a { color: var(--accent); font-size: .9rem; }
+    iframe { width: 100%; height: 78vh; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+    details { margin-top: 8px; }
+    summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+    details ul { color: var(--muted); font-size: .85rem; line-height: 1.6; }
+    /* 別ツールへの導線カード(類似譜面テーブル) */
+    /* eagate ブックマークレット (gsv.fun 方式)。本体は static/bookmarklet.js */
+    .howto ol.steps { color: var(--fg); font-size: .92rem; line-height: 1.7; padding-left: 1.4em; margin: 6px 0 10px; }
+    .howto ol.steps li { margin-bottom: 12px; }
+    .eg-summary { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    #eg-id { width: 100%; font: inherit; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--fg); }
+    .bm-url { margin: 8px 0 4px; }
+    .bm-url-h { font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+    .bm-code-view { margin: 0; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 8px; font: .78rem/1.5 ui-monospace, Menlo, monospace; color: var(--fg);
+      white-space: pre-wrap; word-break: break-all; user-select: all; }
+    .big-btn { display: block; width: 100%; max-width: 420px; margin: 8px 0 2px; padding: 12px 16px; box-sizing: border-box;
+               border-radius: 10px; font-weight: 700; text-align: center; text-decoration: none; font-size: .95rem; }
+    button.big-btn { background: var(--accent); color: #0b1220; }
+    .howto ol.steps a { color: var(--accent); }
+    #upload-card .tabs { flex-wrap: wrap; }
+    @media (max-width: 700px) {          /* スマホ: タブ3つを1行に並べる */
+      #upload-card .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      #upload-card .tab { padding: 8px 4px; font-size: .78rem; line-height: 1.3; white-space: normal; }
+      .tab-note { display: none; }
+    }
+    .from-eagate { border-color: var(--ok); }
+    .links { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 14px 20px; }
+    .links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+    .links .hint { margin-top: 0; }
+    .links b { color: var(--fg); }
+    .credit { margin-top: 28px; color: var(--muted); font-size: .78rem; line-height: 1.7; }
+    .credit a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <script src="nav.js" data-page="upload"></script>
+  <div class="wrap">
+    <!-- 【変更案 2026-08-16】更新履歴(NEW/過去のお知らせ)をやめ、**いま何ができるツールか**の説明に統一。
+         更新の告知は出さない=常設の説明文なので、既定の閉じた状態(open 無し)のまま。 -->
+    <details class="notice-acc">
+      <summary>🔔 このツールについて（できること・対象の選び方）</summary>
+      <div class="sec">
+        <span class="sec-h">📊 全譜面の「今の実力ならどこまで行けるか」を出します</span>
+        e-amusement のプレーデータ CSV から<b>あなたの地力</b>を推定し、
+        ☆9-12 の全譜面について <b>EASY / CLEAR / HARD / EX-HARD / FULL COMBO の点灯確率</b>と
+        <b>スコア・BP の見込み</b>を1枚の表にします。まだ触っていない譜面も推定対象です（約30秒）。
+      </div>
+      <div class="sec">
+        <span class="sec-h">💡 レベル・難易度は「なるべく多く」選んでください</span>
+        <ul>
+          <li><b>ランプかスコア・BP のどちらかを本気でやったレベル・難易度は、選んでおくほど推定が当たります。</b>
+            ランプが伸びていない譜面でも、スコアや BP を詰めていればそれが地力の手がかりになります。</li>
+          <li>いま☆12 を本気でやっているからといって<b>☆12 だけに絞るのは損</b>です。
+            ☆9-11 の記録が推定に使われなくなり、☆9-11 の予測が実力とかけ離れます。</li>
+          <li><b>実力が届かなくて触っていないレベルは、外さなくて大丈夫</b>です。
+            手が出ていない譜面は「まだ届いていない」として正しく扱われます。</li>
+          <li>外した方がいいのは<b>昔やったきり、低いランプのまま放置しているレベル・難易度</b>です
+            （☆9・☆10 の ANOTHER / LEGGENDARIA が典型）。今の実力なら軽く超えられるのに記録が低いままだと、
+            推定がそちらに引っぱられます。</li>
+        </ul>
+      </div>
+    </details>
+    <h1>IIDXのプレーデータCSVをアップロードすると予測してくるやつ(β)</h1>
+    <p class="sub">e-amusement のプレーデータ CSV をアップロードすると、あなたのプレー傾向から
+      各譜面のランプの点灯確率やEXスコア、BPを推定します（約30秒で完成）。</p>
+
+    <div class="card viewer" id="viewer">
+      <label for="view-id">アップロード済みの方：IIDX ID で前回の結果を見る</label>
+      <div class="row2">
+        <input type="text" id="view-id" inputmode="numeric" autocomplete="off">
+        <button class="ghost" id="view-btn">結果を見る</button>
+      </div>
+      <div class="msg muted" id="view-msg" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" id="upload-card">
+      <label>はじめての方：SP のプレーデータを読み込む</label>
+      <div class="tabs" id="tabs">
+        <button type="button" class="tab active" data-mode="file">CSV ファイル</button>
+        <button type="button" class="tab" data-mode="text">テキスト貼り付け<span class="tab-note">（スマホ向け）</span></button>
+        <button type="button" class="tab" data-mode="eagate">e-amusement から直接</button>
+      </div>
+
+      <div class="panel" id="panel-file">
+        <div class="drop" id="drop">
+          <input type="file" id="file" accept=".csv,text/csv">
+          <div><strong>クリックして選択</strong> または ここにドラッグ＆ドロップ</div>
+          <div class="hint">e-amusement でダウンロードした SP のプレーデータ CSV。最大 1MB。</div>
+        </div>
+        <div class="filename" id="filename"></div>
+      </div>
+
+      <div class="panel" id="panel-text" hidden>
+        <label for="paste-id">IIDX ID（ハイフン有無どちらでも可）<span class="req">必須</span></label>
+        <input type="text" id="paste-id" inputmode="numeric" autocomplete="off">
+        <label for="paste-text" style="margin-top:12px">プレーデータCSVの中身を貼り付け</label>
+        <textarea id="paste-text" rows="6" placeholder="バージョン,タイトル,ジャンル,アーティスト,… の CSV を全部貼り付け"></textarea>
+        <div class="hint">e-amusement のスコアデータ CSV を開いて全選択→コピーし、そのまま貼り付けてください。最大 1MB。</div>
+      </div>
+
+      <!-- e-amusement 上で押すと SP スコアCSV + IIDX ID を取ってこのページに渡すブックマークレット
+           (gsv.fun と同じ方式)。本体 static/bookmarklet.js・受け取りは下の script「eagate 連携」節。
+           コードの URL は pages.dev 固定(backend のトンネルURLは持たない=焼き直し対象は DEFAULT_API だけ)。
+           手順はパソコン/スマホの2本。狭い画面ではスマホを先に出す(CSS の order)。 -->
+      <div class="panel" id="panel-eagate" hidden>
+        <div class="eg-got" id="eg-got" hidden>
+          <div class="msg ok">✓ e-amusement からプレーデータを受け取りました</div>
+          <div class="eg-summary" id="eg-summary"></div>
+          <label for="eg-id" style="margin-top:12px">IIDX ID（ハイフン有無どちらでも可）<span class="req">必須</span></label>
+          <input type="text" id="eg-id" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="howto" id="eg-howto">
+          <!-- GSV と同じく URL をそのまま見せる。コピー元の正本はこの pre の1か所。 -->
+          <div class="bm-url">
+            <div class="bm-url-h">ブックマークに登録する URL</div>
+            <pre class="bm-code-view" id="bm-code">javascript:void(!function(d){var s=d.createElement('script');s.charset='utf-8';s.src='https://iidx-estimate.pages.dev/bookmarklet.js?'+Date.now();d.body.appendChild(s)}(document))</pre>
+            <button type="button" class="big-btn bm-copy">コピーする</button>
+          </div>
+          <ol class="steps">
+            <li>上の URL をブックマークに登録する（最初の1回だけ）。</li>
+            <li>e-amusement にログインして <a href="https://p.eagate.573.jp/game/2dx/" target="_blank" rel="noopener">IIDX のページ</a>を開き、そのブックマークを開く。<br>
+              → このページが新しいタブで開き、今作と前作の SP プレーデータが入った状態になります。</li>
+            <li>対象レベル・難易度を選んで「アップロードして生成」を押す。</li>
+          </ol>
+          <div class="hint">e-amusement ベーシックコースへの加入が必要です。</div>
+        </div>
+      </div>
+      </div>
+
+      <div class="target">
+        <!-- 【変更案】「普段プレーするものだけ選べ」→「なるべく多く選べ」に反転。狭く絞られると
+             (例: 今☆12 だけ本気だからと☆12 のみ)選ばれなかったレベルの推定が外れるため。既定 ☆9-12 × A/L は
+             backend 既定(webapp/server.py の levels/difficulties 未指定時)と同じ。
+             選んだ範囲=採点スコープ=表に載る範囲(docs/webapp_options.md §2)。 -->
+        <label>対象レベル・難易度 — <b>放置している譜面が多いと当たりにくくなります</b>。放置してるレベルや難易度を外してください。
+          ※選択内容はお使いのブラウザに記憶され、次回も引き継がれます（別の端末・ブラウザでは引き継がれません）</label>
+        <!-- 過去バージョンの選択。**初期表示は静的マークアップで出す**(オーナー 2026-09-18
+             「画面開いてからDOM操作で入れないでください」)。JS が動く前・API が落ちていても
+             現行2版はここに出ている。IIDX ID が確定したら loadVersions() が本人の版一覧
+             (過去作を持つ人は 4568-2836 のように 5 版)で差し替える。
+             新作が出たら iidx_versions への 1 行 INSERT と**ここの 2 行**を更新する
+             (DEFAULT_API と同じ運用。value は iidx_versions.version)。 -->
+        <div class="grp" id="versions-grp">
+          <span>バージョン</span>
+          <span class="chips" id="versions">
+            <label class="chip"><input type="checkbox" value="34" checked>ZINRAI</label>
+            <label class="chip"><input type="checkbox" value="33" checked>Sparkle Shower</label>
+          </span>
+        </div>
+        <div class="grp">
+          <span>レベル</span>
+          <span class="chips" id="levels">
+            <label class="chip"><input type="checkbox" value="9" checked>☆9</label>
+            <label class="chip"><input type="checkbox" value="10" checked>☆10</label>
+            <label class="chip"><input type="checkbox" value="11" checked>☆11</label>
+            <label class="chip"><input type="checkbox" value="12" checked>☆12</label>
+          </span>
+        </div>
+        <div class="grp">
+          <span>難易度</span>
+          <span class="chips" id="difficulties">
+            <label class="chip"><input type="checkbox" value="N">NORMAL</label>
+            <label class="chip"><input type="checkbox" value="H">HYPER</label>
+            <label class="chip"><input type="checkbox" value="A" checked>ANOTHER</label>
+            <label class="chip"><input type="checkbox" value="L" checked>LEGGENDARIA</label>
+          </span>
+        </div>
+        <div class="est" id="est"></div>
+        <!-- 一時非表示(すぐ復活予定): 学習オプション2つ。復活時は下のJS(DOM ref/POST/lockForm)のコメントも戻す。
+             backend配線(show_extrapolation / dedup_upper_chart)は未完=S2依頼中 (docs/upload_service_log/s3.md)。
+        <label class="chip" style="margin-top:12px">
+          <input type="checkbox" id="dedup-upper">
+          同じ曲で上位譜面があれば下位を学習から除く（実験的）
+        </label>
+        <div class="est" style="margin-top:6px">同曲・同レベルで上位譜面（N&lt;H&lt;A&lt;L）があるとき下位譜面を教師から間引きます。似た譜面の別ランプ平均化を防ぎます。</div>
+        <label class="chip" style="margin-top:12px">
+          <input type="checkbox" id="extrapolate">
+          学習対象外のレベルも外挿して表示する（実験的）
+        </label>
+        <div class="est" style="margin-top:6px">学習したレベルのモデルで、学習しなかったレベルの到達確率も推測して並べます（精度は参考程度）。</div>
+        -->
+      </div>
+
+      <div class="row">
+        <button id="submit" disabled>アップロードして生成</button>
+        <!-- 【変更案】いま生成すると使われるモデルの版。結果カード側には出さない(JS のコメント参照)。 -->
+        <span class="model-badge" id="model-badge"></span>
+        <span class="msg muted" id="form-msg"></span>
+      </div>
+
+      <div class="status" id="status">
+        <div class="spinner"></div>
+        <div>
+          <div class="label" id="status-label">投入中…</div>
+          <div class="qpos" id="status-qpos"></div>
+        </div>
+      </div>
+
+      <details>
+        <summary>CSV について / うまくいかない時</summary>
+        <ul>
+          <li>e-amusement の「SP」スコアデータを CSV 形式でダウンロードしたものを使ってください。</li>
+          <!-- 【変更案】保存済み結果は作った時点のまま=モデル更新後も古い。更新の告知はしない書き方にする。 -->
+          <li><b>前に見た結果と数値が違う / 前のままで変わらない</b>:
+            保存済みの結果は<b>作った時点のまま</b>残ります。最新の推定を見るには、もう一度アップロードしてください。</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="card" id="result">
+      <div class="result-head">
+        <span class="msg ok">✓ 完成しました</span>
+        <span>
+          <a id="open-tab" target="_blank" rel="noopener">新しいタブで開く ↗</a>
+        </span>
+      </div>
+      <iframe id="heatmap" title="到達確率ヒートマップ"></iframe>
+    </div>
+
+    <!-- 別ツールへの導線。/sim は同じ pages.dev に置いた静的ページ(webapp/static/sim/)。
+         backend(tunnel 直開き)は "/" しか配信しないので、**絶対URL**にしてどちらから開いても飛べるようにする。 -->
+    <div class="card links">
+      <a href="https://iidx-estimate.pages.dev/sim/" target="_blank" rel="noopener">🔎 類似譜面テーブル ↗</a>
+      <span class="hint">ある譜面と<b>似ている譜面</b>を探せます。埋めたい1曲の練習台さがしに。</span>
+    </div>
+
+    <footer class="credit">
+      譜面データは <a href="https://textage.cc/" target="_blank" rel="noopener">textage.cc</a> を利用しています。
+      beatmania IIDX は ©KONAMI Amusement。
+      本ツールは非公式のファン制作物で、KONAMI および TexTage とは関係ありません。
+    </footer>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // ---- API base 設定 ------------------------------------------------------
+    // フロントは pages.dev(固定の公開URL)から配信する想定。backend は別オリジンなので、その住所を
+    // DEFAULT_API に焼く。?api=<host> で一時上書き可。pages.dev でも tunnel直開きでも同じ backend を叩く。
+    // ⚠️ backend の住所(=下記トンネルURL)が変わったら DEFAULT_API を更新して再デプロイ。
+    //    quick tunnel は cloudflared が生きてる間は不変。変わるのは再起動/クラッシュ時のみ(launchd常駐で稀)。
+    //    恒久固定は named tunnel(独自ドメイン)→一度焼けば二度と変更不要。
+    const DEFAULT_API = "https://129.225.206.246.sslip.io";
+    const qp = new URLSearchParams(location.search);
+    const API_BASE = (qp.get("api") || DEFAULT_API).replace(/\/+$/, "");
+    try { localStorage.removeItem("api_base"); } catch (e) {} // 旧版が焼いた古いURLを掃除(例外環境あり=try必須)
+
+    const MAX_BYTES = 1 * 1024 * 1024; // eagate SP スコア CSV は全曲入りでも ~400KB。1MB で十分(将来の新曲増も吸収)
+    // 全曲CSVは実データ上どのユーザーも最小1815行。これを大きく下回る=貼り付け/選択が途中で切れた疑い
+    // (実例: 7th styleで切れ99行)。☆9を触る時点で真の初心者はいない=誤警告の心配は薄いので高めに設定。
+    // 完全CSV(≥1815)は誤警告せず、途中切れは広く捕捉。近い切れも拾いたければ1500程度まで上げ可。
+    const MIN_SONG_ROWS_WARN = 1000;
+    const POLL_MS = 4000;
+    const POLL_TIMEOUT_MS = 12 * 60 * 1000; // L0採点は約30秒だが、混雑時の順番待ち+余裕を広めに確保
+
+    // ---- DOM ----------------------------------------------------------------
+    const $ = (id) => document.getElementById(id);
+    const drop = $("drop"), fileInput = $("file"), filenameEl = $("filename");
+    const tabsBox = $("tabs"), panelFile = $("panel-file"), panelText = $("panel-text");
+    const panelEagate = $("panel-eagate"), egGot = $("eg-got"), egSummary = $("eg-summary"), egId = $("eg-id"),
+          egHowto = $("eg-howto");
+    const pasteId = $("paste-id"), pasteText = $("paste-text");
+    const submitBtn = $("submit"), formMsg = $("form-msg");
+    const statusEl = $("status"), statusLabel = $("status-label"), statusQpos = $("status-qpos");
+    const resultCard = $("result"), iframe = $("heatmap"), openTab = $("open-tab");
+    const levelsBox = $("levels"), diffsBox = $("difficulties"), estEl = $("est");
+    const versionsBox = $("versions");
+    const viewIdInput = $("view-id"), viewBtn = $("view-btn"), viewMsg = $("view-msg");
+    // IIDX ID 入力欄のプレースホルダは1定義(SSOT)を両欄(結果閲覧/テキスト貼り付け)に適用。
+    const IIDX_ID_PLACEHOLDER = "1234-5678";
+    viewIdInput.placeholder = pasteId.placeholder = egId.placeholder = IIDX_ID_PLACEHOLDER;
+    // 一時非表示(すぐ復活予定): const extrapolateBox = $("extrapolate"); const dedupBox = $("dedup-upper");
+
+    // 【変更案】表示専用のモデル版。backend は版を返さないのでフロントの静的表記。**更新時はここだけ直す**。
+    //   結果カードに出さないのは、/u/{token}/heatmap が **保存済み HTML をそのまま返す**ため
+    //   （古い結果に新しい版のバッジが付いて嘘になる）。ここは「今アップロードしたら使われる版」を指す。
+    //   ※ backend が版を返す口(例 GET /meta)を足せば、結果ごとの正しい表示に移行できる。
+    //   ⚠️ バッジへの描画は**この宣言より下**で行う。上に書くと TDZ(Temporal Dead Zone)で
+    //      ReferenceError → **script 全体が停止**し、D&D もボタンも死ぬ(2026-08-16 に実際に踏んだ)。
+    const MODEL_VERSION = "2026-09-14";   // PROD4(amort_20260913prod4_newband_from_prod3_ep25) を 2026-09-15 に promote。規定(レベル軸除去→|a⊥|/|a| cap→兄弟→DAG)を焼いた .lvstrip.pcap を 09-14 に確定させた版
+    $("model-badge").textContent = `予測モデル ${MODEL_VERSION}`;
+
+    const LAST_TOKEN_KEY = "last_token";
+    // 【変更案】**保存キーを v2 に切り替える**。既定は「未保存のときだけ」効くので、キーを据え置くと
+    //   旧既定(全チェック NHAL)を保存済みの既存ユーザーには新既定が一生届かない。キーを変えると
+    //   全員が一度だけ新既定に揃い、そのあとは各自の選択を今までどおり記憶する(旧キーは放置=無害)。
+    const SEL_LEVELS_KEY = "sel_levels_v2";       // 対象レベルの前回選択(このブラウザのみ)
+    const SEL_DIFFS_KEY = "sel_difficulties_v2";  // 対象難易度の前回選択
+    // 【変更案】未保存(初回)の既定 = ☆9-12 × ANOTHER/LEGGENDARIA。
+    //   従来は「全チェック(NHAL)」だったが、backend 既定(webapp/server.py: levels/difficulties 未指定時は
+    //   ☆9-12・A/L)と食い違っていた。UI 既定を backend 既定に合わせる。
+    const DEFAULT_LEVELS = ["9", "10", "11", "12"];
+    const DEFAULT_DIFFS = ["A", "L"];
+
+    // localStorage は環境によって**アクセス自体が例外**になる(Chrome の file://、privacy モード等)。
+    // 読み書きは必ずこの2つを経由し、失敗しても既定動作で続行する。
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+    let selectedFile = null;
+    let pollTimer = null;
+    let mode = "file";   // "file" (CSVファイル) | "text" (スマホ向けテキスト貼り付け) | "eagate" (ブックマークレット)
+    // eagate ブックマークレットで受け取った版ごとの CSV [{csv, label}]。古い版→今作の順。未受信は null。
+    // どの版を取り込むかは egSummary のチェックボックスで利用者が選ぶ(既定=全部)。
+    // 1版=1CSV=1ジョブで送るので、版ごとに別ファイル・別 run(game_version は backend が CSV の中身で判定)。
+    let eagate = null;
+    function eagateSelected() {
+      if (!eagate) return [];
+      const on = new Set([...egSummary.querySelectorAll("input:checked")].map((c) => Number(c.value)));
+      return eagate.filter((_, i) => on.has(i));
+    }
+
+    // ---- 入力方式タブ (ファイル / テキスト貼り付け) --------------------------
+    function activateMode(m) {
+      mode = m;
+      tabsBox.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.mode === m));
+      panelFile.hidden = mode !== "file";
+      panelText.hidden = mode !== "text";
+      panelEagate.hidden = mode !== "eagate";
+      formMsg.textContent = ""; formMsg.className = "msg muted";
+      refreshSubmit();
+    }
+    tabsBox.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab");
+      if (!btn || btn.disabled) return;
+      activateMode(btn.dataset.mode);
+    });
+    pasteText.addEventListener("input", refreshSubmit);
+    pasteId.addEventListener("input", () => { loadVersions(extractIidxId(pasteId.value)); refreshSubmit(); });
+    egId.addEventListener("input", () => { loadVersions(extractIidxId(egId.value)); refreshSubmit(); });
+
+    // ---- 学習対象（levels / difficulties）の収集 ----------------------------
+    // 値は comma-joined で POST /jobs に送る（契約: levels="9,10,..." / difficulties="N,H,..."）。
+    // 全選択は backend 既定(☆9-12 / NHAL)と等価。少なくするほど学習が速い。
+    function checkedValues(box) {
+      return [...box.querySelectorAll("input:checked")].map((c) => c.value);
+    }
+    // 選択状態を localStorage に保存/復元(このブラウザのみ)。初回(保存なし)はデフォルト全チェック。
+    function saveSelection() {
+      lsSet(SEL_LEVELS_KEY, checkedValues(levelsBox).join(","));
+      lsSet(SEL_DIFFS_KEY, checkedValues(diffsBox).join(","));
+    }
+    function applySaved(box, raw, defaults) {
+      // 未保存(null)も空(全部外した)も既定値に戻す。空では submit 不可＝空状態を保持する意味が無い。
+      const set = new Set(raw ? raw.split(",").filter(Boolean) : defaults);
+      box.querySelectorAll("input").forEach((c) => { c.checked = set.has(c.value); });
+    }
+    function restoreSelection() {
+      applySaved(levelsBox, lsGet(SEL_LEVELS_KEY), DEFAULT_LEVELS);
+      applySaved(diffsBox, lsGet(SEL_DIFFS_KEY), DEFAULT_DIFFS);
+    }
+    function updateEstimate() {
+      const nl = checkedValues(levelsBox).length, nd = checkedValues(diffsBox).length;
+      if (!nl || !nd) {
+        estEl.textContent = "レベル・難易度をそれぞれ1つ以上選んでください";
+        estEl.style.color = "var(--err)";
+      } else {
+        // 【変更案】選択内容の読み上げ(「レベル4種 × 難易度2種」等)はチェックボックスを見れば分かるので出さない。
+        //   狭すぎる選択(レベル1種)の時だけ、残すほど当たるというヒントを添える(ブロックはしない)。
+        estEl.textContent = nl === 1
+          ? "プレー記録のあるレベルは残すほど推定が当たります（約30秒で完成）"
+          : "約30秒で完成します";
+        estEl.style.color = "var(--muted)";
+      }
+      refreshSubmit();
+    }
+    levelsBox.addEventListener("change", () => { saveSelection(); updateEstimate(); });
+    diffsBox.addEventListener("change", () => { saveSelection(); updateEstimate(); });
+
+    // ---- ファイル名 → IIDX ID 抽出 (フロント側の事前チェックのみ。正は backend) ----
+    function extractIidxId(name) {
+      const m = name.match(/(\d{4})-?(\d{4})/);
+      return m ? m[1] + m[2] : null;
+    }
+
+    // 送信可否 = 入力OK かつ レベル/難易度を各1つ以上選択。入力OKは方式で分岐:
+    //   file: ファイル選択済み / text: IIDX ID 8桁 + 本文が非空
+    function inputReady() {
+      if (mode === "file") return !!selectedFile;
+      if (mode === "eagate") return eagateSelected().length > 0 && !!extractIidxId(egId.value);
+      return !!extractIidxId(pasteId.value) && pasteText.value.trim().length > 0;
+    }
+    function refreshSubmit() {
+      const selOk = checkedValues(levelsBox).length > 0 && checkedValues(diffsBox).length > 0;
+      submitBtn.disabled = !(inputReady() && selOk);
+    }
+
+    function setFile(f) {
+      selectedFile = null;
+      filenameEl.textContent = "";
+      formMsg.textContent = ""; formMsg.className = "msg muted";
+      if (!f) { refreshSubmit(); return; }
+
+      if (!/\.csv$/i.test(f.name)) {
+        formMsg.textContent = ".csv ファイルを選んでください"; formMsg.className = "msg err";
+        refreshSubmit(); return;
+      }
+      if (f.size > MAX_BYTES) {
+        formMsg.textContent = "ファイルが大きすぎます（1MB まで）"; formMsg.className = "msg err";
+        refreshSubmit(); return;
+      }
+      // ファイル名チェックは残す（変なファイルを弾く門）が、仕組み(IIDX ID 抽出)はユーザーに見せない。
+      // e-amusement からDLした CSV をそのまま上げれば必ず通るので、引っかかる=別物ファイル。
+      const id = extractIidxId(f.name);
+      if (!id) {
+        formMsg.textContent = "このファイルには対応していません。e-amusement でダウンロードした"
+          + "プレーデータ CSV をそのままアップロードしてください。";
+        formMsg.className = "msg err"; refreshSubmit(); return;
+      }
+      selectedFile = f;
+      filenameEl.textContent = f.name; // textContent は自動エスケープ。IIDX ID は表示しない。
+      loadVersions(id);
+      refreshSubmit();
+    }
+
+    // IIDX ID が確定したら、その人が持つ版一覧で**静的マークアップを差し替える**。
+    // 取れなければ何もしない = 初期表示(現行2版)のまま採点できる。
+    async function loadVersions(token) {
+      if (!token) return;
+      try {
+        const r = await fetch(`${API_BASE}/u/${token}/versions`);
+        if (!r.ok) return;
+        const vs = (await r.json()).versions || [];
+        if (!vs.length) return;
+        versionsBox.innerHTML = "";
+        // 表示はバージョン名だけ(オーナー 2026-09-15「今作とか譜面数とかいらないの消して」)。
+        vs.forEach((v) => {
+          const lab = document.createElement("label");
+          lab.className = "chip";
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.value = String(v.version); cb.checked = true;   // 既定=全部(今までの挙動)
+          lab.appendChild(cb);
+          lab.appendChild(document.createTextNode(v.name));
+          versionsBox.appendChild(lab);
+        });
+      } catch (e) { /* 取れなければ初期表示のまま */ }
+    }
+
+    // ---- ドラッグ＆ドロップ / 選択 ------------------------------------------
+    drop.onclick = () => fileInput.click();
+    fileInput.onchange = () => setFile(fileInput.files[0]);
+    ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => {
+      e.preventDefault(); drop.classList.add("drag");
+    }));
+    ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => {
+      e.preventDefault(); drop.classList.remove("drag");
+    }));
+    drop.addEventListener("drop", (e) => {
+      const f = e.dataTransfer.files[0];
+      if (f) { fileInput.files = e.dataTransfer.files; setFile(f); }
+    });
+
+    // ---- 状態表示 -----------------------------------------------------------
+    const STATUS_LABELS = {
+      submitting: "投入中…",
+      queued: "順番待ち…",
+      training: "推定中…（約30秒で完成します）",
+    };
+    function showStatus(key, qpos) {
+      statusEl.classList.add("show");
+      statusLabel.textContent = STATUS_LABELS[key] || key;
+      statusQpos.textContent = (qpos != null && qpos !== "") ? `（待ち ${qpos} 件目）` : "";
+    }
+    function hideStatus() { statusEl.classList.remove("show"); statusQpos.textContent = ""; }
+    function setFormMsg(text, cls) { formMsg.textContent = text; formMsg.className = "msg " + (cls || "muted"); }
+    function lockForm(locked) {
+      submitBtn.disabled = locked || !inputReady();
+      fileInput.disabled = locked;
+      pasteId.disabled = locked; pasteText.disabled = locked; egId.disabled = locked;
+      egSummary.querySelectorAll("input").forEach((c) => { c.disabled = locked; });
+      tabsBox.querySelectorAll(".tab").forEach((t) => { t.disabled = locked; });
+      [...levelsBox.querySelectorAll("input"), ...diffsBox.querySelectorAll("input")]  // 復活時: , extrapolateBox, dedupBox
+        .forEach((c) => { c.disabled = locked; });
+      drop.style.pointerEvents = locked ? "none" : "";
+      drop.style.opacity = locked ? .55 : 1;
+    }
+
+    // ---- 投入 → ポーリング --------------------------------------------------
+    submitBtn.onclick = async () => {
+      if (!inputReady()) return;
+      const levels = checkedValues(levelsBox), difficulties = checkedValues(diffsBox);
+      if (!levels.length || !difficulties.length) {
+        setFormMsg("レベル・難易度をそれぞれ1つ以上選んでください", "err"); return;
+      }
+      // 行数が少なすぎる=貼り付け/選択が途中で切れた疑い。ブロックせず確認だけ(真の初心者は続行可)。
+      const csvText = mode === "file" ? await selectedFile.text() : mode === "eagate" ? eagateSelected().slice(-1)[0].csv : pasteText.value;
+      const songRows = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0).length - 1; // ヘッダ1行を除く
+      if (songRows < MIN_SONG_ROWS_WARN) {
+        const ok = confirm(
+          `曲数が ${Math.max(songRows, 0)} 件しかありません。全曲データは通常1800件ほどです。\n`
+          + "コピー/貼り付けが途中で切れていないか確認してください（下までスクロールして全選択）。\n\n"
+          + "このまま続けますか？");
+        if (!ok) { setFormMsg("中断しました。全曲を選択し直してからもう一度お試しください。", "muted"); return; }
+      }
+      // 完成画面 /u/{token} 用の token = IIDX ID。file はファイル名から、text は入力欄から。
+      const token = extractIidxId(mode === "file" ? selectedFile.name : mode === "eagate" ? egId.value : pasteId.value);
+      resultCard.classList.remove("show");
+      lockForm(true); setFormMsg(""); showStatus("submitting");
+
+      let jobId;
+      try {
+        const fd = new FormData();
+        // 契約拡張[S2]: 学習対象。comma-joined。全選択時は backend 既定と等価。
+        fd.append("levels", levels.join(","));
+        fd.append("difficulties", difficulties.join(","));
+      const versions = checkedValues(versionsBox);      // 版チェックボックス(全部チェック=全版)
+      if (versions.length) fd.append("versions", versions.join(","));
+        // 一時非表示(すぐ復活予定): 学習オプション2つの POST。backend配線が済んだら復活(S2依頼中)。
+        // fd.append("show_extrapolation", extrapolateBox.checked ? "true" : "false");  // --predict-levels 外挿表示
+        // fd.append("dedup_upper_chart", dedupBox.checked ? "true" : "false");        // --dedup-upper-chart
+        let endpoint;
+        if (mode === "file") {
+          fd.append("file", selectedFile, selectedFile.name);
+          endpoint = "/jobs";
+        } else if (mode === "eagate") {
+          // ブックマークレット経路: 中身はテキスト貼り付けと同じ eagate CSV なので同じ口に送る。
+          fd.append("text", eagateSelected().slice(-1)[0].csv);   // 選んだ中で一番新しい版。結果はこのジョブを待つ
+          fd.append("iidx_id", egId.value);
+          endpoint = "/jobs/text";
+        } else {
+          // テキスト経路: CSV 本文 + IIDX ID を別入力(CSV は ID を持たない)。中身の形式は file と同一。
+          fd.append("text", pasteText.value);
+          fd.append("iidx_id", pasteId.value);
+          endpoint = "/jobs/text";
+        }
+        // 選んだ版のうち古い方を先に送る。キューは直列(JobQueue の単一ワーカー)なので、最後に送る
+        // 一番新しい版のジョブが走る時には古い版の取込が済んでいる。結果は最後のジョブだけ待つ。
+        // 古い版の失敗(☆9以上が0件で 400 等)は最後の送信を止めない。
+        const extraFailed = [];
+        if (mode === "eagate") {
+          for (const x of eagateSelected().slice(0, -1)) {
+            const xfd = new FormData();
+            xfd.append("levels", levels.join(","));
+            xfd.append("difficulties", difficulties.join(","));
+            if (versions.length) xfd.append("versions", versions.join(","));
+            xfd.append("text", x.csv);
+            xfd.append("iidx_id", egId.value);
+            const xr = await fetch(`${API_BASE}/jobs/text`, { method: "POST", body: xfd }).catch(() => null);
+            if (!xr || !xr.ok) extraFailed.push(x.label);
+          }
+        }
+        const res = await fetch(`${API_BASE}${endpoint}`, { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || `アップロードに失敗しました (HTTP ${res.status})`);
+        }
+        jobId = data.job_id;
+        if (!jobId) throw new Error("サーバーから job_id が返りませんでした");
+        if (extraFailed.length) setFormMsg(`${extraFailed.join("・")} のデータは送れませんでした。`, "muted");
+      } catch (e) {
+        hideStatus(); lockForm(false);
+        setFormMsg(netMsg(e), "err");
+        return;
+      }
+      pollJob(jobId, token);
+    };
+
+    function netMsg(e) {
+      // fetch の TypeError は接続不可 / CORS。文言で案内。
+      if (e instanceof TypeError) return "サーバーに接続できませんでした。時間をおいて再度お試しください（一時的な不調の可能性があります）。";
+      return e.message || String(e);
+    }
+
+    function pollJob(jobId, token) {
+      const startedAt = Date.now();
+      const tick = async () => {
+        if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+          hideStatus(); lockForm(false);
+          setFormMsg("タイムアウトしました。時間をおいて再度お試しください。", "err");
+          return;
+        }
+        try {
+          const res = await fetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}`);
+          if (!res.ok) throw new Error(`状態取得に失敗 (HTTP ${res.status})`);
+          const data = await res.json();
+          switch (data.status) {
+            case "queued":   showStatus("queued", data.queue_position); break;
+            case "training": showStatus("training"); break;
+            case "done":     hideStatus(); showResult(token, jobId); lockForm(false); return;
+            case "error":    hideStatus(); lockForm(false);
+                             setFormMsg("推定でエラーが発生しました: " + (data.error || "不明なエラー"), "err"); return;
+            default:         showStatus(data.status);
+          }
+        } catch (e) {
+          // 一過性のネットワークエラーは諦めずポーリング継続
+          showStatus("training");
+        }
+        pollTimer = setTimeout(tick, POLL_MS);
+      };
+      tick();
+    }
+
+    // iframe + 別タブリンクに URL を流して結果カードを表示（アップロード完成 / 既存閲覧で共通）。
+    // token 引数は showResult/viewExisting の呼び出し互換のため残す(現状は未使用)。
+    function displayHeatmap(url, scroll, token) {
+      iframe.src = url;
+      openTab.href = url;
+      resultCard.classList.add("show");
+      if (scroll) resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function showResult(token, jobId) {
+      // 安定URL /u/{token}/heatmap を優先（再起動耐性・共有可）。token 取れなければ job 単位にフォールバック。
+      const url = token
+        ? `${API_BASE}/u/${encodeURIComponent(token)}/heatmap`
+        : `${API_BASE}/jobs/${encodeURIComponent(jobId)}/heatmap`;
+      if (token) lsSet(LAST_TOKEN_KEY, token); // 次回 自動表示用
+      displayHeatmap(url, true, token);
+      setFormMsg("完成しました。下に表示しています。", "ok");
+    }
+
+    // ---- 既存結果ビューア（アップロード済みの人 / 再起動後・他端末でも開ける /u/{token}） ----
+    function setViewMsg(text, cls) { viewMsg.textContent = text; viewMsg.className = "msg " + (cls || "muted"); }
+
+    // token を引数に取れば自動表示(初期ロード)、無ければ入力欄から。silent=true は 404 を黙る(自動表示時)。
+    async function viewExisting(rawToken, silent) {
+      const token = extractIidxId(rawToken != null ? String(rawToken) : viewIdInput.value);
+      if (!token) {
+        if (!silent) setViewMsg("IIDX ID（ハイフン有無どちらでも可）を入力してください", "err");
+        return;
+      }
+      const url = `${API_BASE}/u/${encodeURIComponent(token)}/heatmap`;
+      if (!silent) setViewMsg("読み込み中…");
+      try {
+        const res = await fetch(url);
+        if (res.status === 404) {
+          if (!silent) setViewMsg("この IIDX ID の結果はまだありません。CSV をアップロードして学習してください。", "err");
+          return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      } catch (e) {
+        if (!silent) setViewMsg(netMsg(e), "err");
+        return;
+      }
+      lsSet(LAST_TOKEN_KEY, token);
+      // スクロールしない(巨大な結果カード先頭へ飛ぶと入力欄が消えてウザい)。下に出したことは文言で知らせる。
+      setViewMsg(silent ? "" : "結果を下に表示しました ↓", "ok");
+      displayHeatmap(url, false, token);
+    }
+    viewBtn.onclick = () => viewExisting();
+    viewIdInput.addEventListener("keydown", (e) => { if (e.key === "Enter") viewExisting(); });
+
+    window.addEventListener("beforeunload", () => { if (pollTimer) clearTimeout(pollTimer); });
+
+    // 画面幅で初期の入力方式を決める: 狭い(スマホ)=テキスト貼り付け / 広い(PC)=CSVファイル。
+    // タブは残すのでユーザーは手動で切替可。ファイル選択ダイアログはモバイルだと使いにくいための既定分岐。
+    const NARROW_PX = 700;
+    activateMode(window.innerWidth < NARROW_PX ? "text" : "file");
+
+    restoreSelection(); // 前回の学習対象チェック(このブラウザ)を復元。初回は未選択のまま。
+    updateEstimate(); // 初期表示（推定目安 + 送信ボタンの初期状態）
+
+    // 前回使った IIDX ID があれば prefill + 自動表示（=「最初からこのページを表示」要望）。
+    // テキスト貼り付けの IIDX ID 欄(paste-id)も同じ前回値で自動補完する(CSV 本文に ID は無いので前回入力を再利用)。
+    const lastToken = lsGet(LAST_TOKEN_KEY);
+    if (lastToken) {
+      const fmt = `${lastToken.slice(0,4)}-${lastToken.slice(4)}`;
+      viewIdInput.value = fmt;
+      pasteId.value = fmt;   // テキスト経路の IIDX ID を自動補完(貼り付けだけで送信可能に)
+      egId.value = fmt;      // ブックマークレット経路も同じ(eagate から ID が来れば下で上書き)
+      refreshSubmit();       // 補完で送信可否が変わりうるので再評価
+      // **版チェックボックスも初期表示で出す**（オーナー 2026-09-15「デフォルトで2つのチェックボックスを
+      //   出せって言ってるねん」）。loadVersions は CSV 選択(:454)と ID 手入力(:373)からしか呼ばれておらず、
+      //   ここで value を代入しても input イベントは発火しないので**起動時だけ欄が出ない**配線漏れだった。
+      loadVersions(lastToken);
+      viewExisting(lastToken, true);
+    }
+
+    // ---- ブックマークレットのコピー -------------------------------------------------
+    // コピーボタン(.bm-copy)。コードの正本は表示中の #bm-code(pre)の1か所。
+    document.querySelectorAll(".bm-copy").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const code = $("bm-code").textContent.trim();
+        let ok = false;
+        try { await navigator.clipboard.writeText(code); ok = true; } catch (e) {}
+        if (!ok) {             // clipboard API が使えない環境向け(古い iOS 等)
+          const ta = document.createElement("textarea");
+          ta.value = code; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, code.length);
+          try { ok = document.execCommand("copy"); } catch (e) {}
+          ta.remove();
+        }
+        btn.textContent = ok ? "✓ コピーしました" : "コピーできませんでした";
+      });
+    });
+
+
+    // ---- eagate 連携 (static/bookmarklet.js が開いた時だけ動く) -------------------------
+    // 契約は bookmarklet.js 冒頭。こちらから ready を送り続け、eagate オリジンからの data だけ受け取る。
+    // 受け取ったら**テキスト貼り付け経路に流し込むだけ**で送信はしない(対象選択はユーザーが確認して押す)。
+    // 手順の後段(POST /jobs/text → ポーリング → 結果表示)は手で貼り付けた場合と完全に同じ。
+    // 最後に置くのは、前回 IIDX ID の自動補完(上)より eagate から来た ID を優先させるため。
+    const EAGATE_ORIGIN = "https://p.eagate.573.jp";
+    const EAGATE_WAIT_MS = 60000;   // ブックマークを押した直後に開くので、取得(CSV 2本)が終わるまで待つ
+    if (qp.get("from") === "eagate" && window.opener) {
+      activateMode("eagate");
+      setFormMsg("e-amusement からプレーデータを受け取り中…", "muted");
+      let got = false;
+      const ping = setInterval(() => {
+        try { window.opener.postMessage({ type: "iidx-est:ready" }, EAGATE_ORIGIN); } catch (e) {}
+      }, 500);
+      setTimeout(() => {
+        if (got) return;
+        clearInterval(ping);
+        setFormMsg("受け取れませんでした。e-amusement のタブでもう一度ブックマークを押してください。", "err");
+      }, EAGATE_WAIT_MS);
+      window.addEventListener("message", (ev) => {
+        if (ev.origin !== EAGATE_ORIGIN || got || !ev.data) return;
+        if (ev.data.type === "iidx-est:error") {          // 取得失敗(未ログイン等)。理由を出して待ちをやめる
+          got = true; clearInterval(ping);
+          setFormMsg(String(ev.data.message || "プレーデータを取得できませんでした。"), "err");
+          return;
+        }
+        if (ev.data.type !== "iidx-est:data") return;
+        got = true;
+        clearInterval(ping);
+        const rowsOf = (t) => t.split(/\r?\n/).filter((l) => l.trim()).length - 1;
+        const labelOf = (t) => { const ls = t.trim().split(/\r?\n/); return ls.length > 1 ? ls[ls.length - 1].split(",")[0] : ""; };
+        const csv = String(ev.data.csv || "");
+        const extra = Array.isArray(ev.data.extra)
+          ? ev.data.extra.filter((x) => x && x.csv).map((x) => ({ csv: String(x.csv), version: String(x.version), label: String(x.label || x.version) }))
+          : [];
+        eagate = [...extra.slice().reverse().map((x) => ({ csv: x.csv, label: x.label })),   // 古い版→今作
+                  { csv, label: labelOf(csv) }];
+        if (ev.data.iidx_id) egId.value = String(ev.data.iidx_id);
+        // 版ごとにチェックボックス(既定=全部チェック)。表示は新しい版から。textContent で組む=エスケープ不要。
+        egSummary.textContent = "";
+        eagate.map((x, i) => ({ ...x, i })).reverse().forEach((x) => {
+          const lab = document.createElement("label");
+          lab.className = "chip";
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.value = String(x.i); cb.checked = true;
+          cb.addEventListener("change", refreshSubmit);
+          lab.appendChild(cb);
+          lab.appendChild(document.createTextNode(`${x.label}（${rowsOf(x.csv)} 曲）を取り込む`));
+          egSummary.appendChild(lab);
+        });
+        egGot.hidden = false;
+        egHowto.hidden = true;
+        loadVersions(extractIidxId(egId.value));
+        refreshSubmit();
+        const card = $("upload-card");
+        card.classList.add("from-eagate");
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (extractIidxId(egId.value)) {
+          setFormMsg("対象レベル・難易度を確認して「アップロードして生成」を押してください。", "ok");
+        } else {
+          setFormMsg("IIDX ID を入力してから「アップロードして生成」を押してください。", "ok");
+          egId.focus();
+        }
+        // リロードで再び待ち受けないよう from だけ URL から外す(?api= 等は残す)。
+        try { const u = new URL(location.href); u.searchParams.delete("from"); history.replaceState(null, "", u); } catch (e) {}
+      });
+    }
+  })();
+  </script>
+</body>
+</html>
